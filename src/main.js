@@ -1,0 +1,17 @@
+/**
+ * 入口：注册 pinia / 路由 / Element Plus，挂载 App
+ */
+import { createApp } from 'vue'
+import { createPinia } from 'pinia'
+import ElementPlus from 'element-plus'
+import zhCn from 'element-plus/es/locale/lang/zh-cn'
+import 'element-plus/dist/index.css'
+import App from './App.vue'
+import { router } from './router'
+import './assets/main.css'
+
+createApp(App)
+  .use(createPinia())
+  .use(router)
+  .use(ElementPlus, { locale: zhCn })
+  .mount('#app')

@@ -1,0 +1,92 @@
+/* ============================================================
+   全局样式 + 科技蓝设计 token（官方网址风格，全站统一用 var(--accent)）
+   板块 A · A1 设计 token + A2 响应式断点
+   ============================================================ */
+
+:root {
+  /* ── 主题色 ── */
+  --accent: #1677ff;
+  --accent-light: #4096ff;
+  --accent-gradient: linear-gradient(135deg, #1677ff 0%, #4096ff 100%);
+
+  /* ── 文字色 ── */
+  --text-primary: #303133;
+  --text-secondary: #7a7f89;
+  --text-disabled: #b8bcc4;
+
+  /* ── 背景 / 边框 ── */
+  --bg-page: #f6f8fb;
+  --bg-card: #ffffff;
+  --border: #e5e7eb;
+  --divider: #eef0f2;
+
+  /* ── 状态色 ── */
+  --success: #16a34a;
+  --warning: #f59e0b;
+  --error: #f5222d;
+  --info: #8c93a1;
+
+  /* ── 字号阶梯 ── */
+  --font-xs: 12px;
+  --font-sm: 13px;
+  --font-base: 14px;
+  --font-md: 16px;
+  --font-lg: 18px;
+  --font-xl: 22px;
+
+  /* ── 间距栅格 ── */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space: 12px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+
+  /* ── 圆角 / 阴影 ── */
+  --radius-sm: 6px;
+  --radius: 8px;
+  --radius-lg: 12px;
+  --shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.04);
+  --shadow: 0 2px 12px rgba(22, 119, 255, 0.08);
+  --shadow-lg: 0 6px 24px rgba(0, 0, 0, 0.1);
+
+  /* ── 安全区（移动端底部） ── */
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+
+  /* ── Element Plus 主色改为科技蓝（默认蓝但色值不同） ── */
+  --el-color-primary: #1677ff;
+  --el-color-primary-light-3: #5ca0ff;
+  --el-color-primary-light-5: #8bbfff;
+  --el-color-primary-light-7: #b9d6ff;
+  --el-color-primary-light-8: #d0e4ff;
+  --el-color-primary-light-9: #e8f1ff;
+  --el-color-primary-dark-2: #125fcc;
+  --el-border-radius-base: 8px;
+}
+
+/* ── 响应式断点：全站统一 768px（见 utils/breakpoint.js，勿各自另写断点） ── */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
+    'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  font-size: var(--font-base);
+  color: var(--text-primary);
+  background: var(--bg-page);
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
