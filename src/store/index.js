@@ -23,10 +23,20 @@ export const useUserStore = defineStore('user', () => {
     return res
   }
 
+  /** 注册即登录：接口返回结构同登录 */
+  async function register(payload) {
+    const res = await api.register(payload)
+    storage.token = res.access_token
+    setUser(res.user)
+    return res
+  }
+
   function logout() {
+    // 先同步清本地（立即生效，避免路由守卫仍读到 token），再异步通知服务端吊销 refresh cookie
     storage.clear()
     user.value = null
     balance.value = null
+    api.logout().catch(() => {})
   }
 
   /** 拉取余额（布局壳常驻显示、支付/充值后刷新） */
@@ -39,5 +49,5 @@ export const useUserStore = defineStore('user', () => {
     return balance.value
   }
 
-  return { user, balance, setUser, login, logout, refreshBalance }
+  return { user, balance, setUser, login, register, logout, refreshBalance }
 })

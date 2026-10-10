@@ -59,8 +59,10 @@ http.interceptors.response.use(
 
       // 1002 未认证 / token 无效 → 踢回登录
       if (body.code === 1002) {
+        const hadToken = !!storage.token
         storage.clear()
-        if (window.location.pathname !== '/login') window.location.href = '/login'
+        // 只有「曾有 token 却失效」才整页跳登录；游客在公开页触到 1002 是预期，静默即可
+        if (hadToken && window.location.pathname !== '/login') window.location.href = '/login'
       }
 
       // 其余业务错误：抛出整个 body，页面用 catch (e) 拿 e.code / e.message / e.data
