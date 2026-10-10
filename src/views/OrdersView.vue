@@ -274,5 +274,18 @@ export default {
     display: inline-flex;
     align-items: center;
   }
+  /* 分页器也是触控目标：A 组 PagedTable 用的是 el-pagination 默认尺寸（约 32px）。
+     用 :deep() 从外层放大，不修改 A 组的组件文件。 */
+  .orders :deep(.el-pagination) {
+    --el-pagination-button-height: 44px;
+    --el-pagination-button-width: 44px;
+  }
+  .orders :deep(.el-pagination button),
+  .orders :deep(.el-pager li) {
+    min-width: 44px;
+    height: 44px;
+    line-height: 44px;
+    font-size: var(--font-base);
+  }
 }
 </style>
