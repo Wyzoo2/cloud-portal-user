@@ -14,7 +14,11 @@ export const api = {
   // 认证
   register: $(mock.register, payload => http.post('/auth/register', payload)),
   login: $(mock.login, (username, password) => http.post('/auth/login', { username, password })),
-  logout: $(mock.logout, () => http.post('/auth/logout')),
+  // logout 支持可选 token：后端 logout 需要 Bearer，前端先清本地 token 后需手动带上
+  logout: $(mock.logout, token => {
+    const headers = token ? { Authorization: 'Bearer ' + token } : {}
+    return http.post('/auth/logout', null, { headers })
+  }),
 
   // 商城
   getProducts: $(mock.getProducts, (params = {}) => http.get('/shop/products', { params })),

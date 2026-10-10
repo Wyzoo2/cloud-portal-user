@@ -5,7 +5,7 @@
  * - 金额单位一律「分」；id 一律字符串
  */
 
-export const USE_MOCK = true
+export const USE_MOCK = false
 
 /** 模拟网络延迟 */
 function delay(data, ms = 280) {

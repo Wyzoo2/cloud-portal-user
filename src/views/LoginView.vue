@@ -17,6 +17,7 @@
       <div class="form-side">
         <h1>欢迎回来</h1>
         <p class="sub">登录你的云平台账号</p>
+        <el-alert v-if="notice" class="alert" :title="notice" type="warning" :closable="false" show-icon />
         <el-form ref="formRef" :model="form" :rules="rules" @submit.prevent="onLogin">
           <el-form-item prop="username">
             <el-input v-model="form.username" placeholder="用户名 / 手机号" size="large" clearable />
@@ -29,7 +30,7 @@
           </el-button>
           <el-alert v-if="error" class="alert" :title="error" type="error" :closable="false" show-icon />
         </el-form>
-        <div class="demo-tip">演示账号：demo / demo1234</div>
+        <div v-if="showDemoTip" class="demo-tip">演示账号：demo / demo1234</div>
         <div class="foot">
           还没有账号？<router-link to="/register">立即注册</router-link>
         </div>
@@ -41,6 +42,7 @@
 <script>
 import { useUserStore } from '../store'
 import { errorMessage } from '../utils/errors'
+import { USE_MOCK } from '../mock'
 
 export default {
   name: 'LoginView',
@@ -52,8 +54,15 @@ export default {
         password: [{ required: true, message: '请输入密码', trigger: 'blur' }]
       },
       loading: false,
-      error: ''
+      error: '',
+      notice: '',
+      // 仅 mock 模式展示演示账号提示
+      showDemoTip: USE_MOCK
     }
+  },
+  created() {
+    // token 失效被踢回登录时，带 expired 参数提示用户
+    if (this.$route.query.expired) this.notice = '登录已过期，请重新登录'
   },
   methods: {
     async onLogin() {
