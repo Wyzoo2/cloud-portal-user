@@ -11,7 +11,7 @@
     </div>
 
     <PagedTable v-reveal="{ delay: 100 }" :columns="columns" :rows="rows" :loading="loading" :total="total"
-      :page="page" :size="size" empty-text="暂无充值记录"
+      :page="page" :size="size" row-key="apply_id" empty-text="暂无充值记录"
       @page-change="onPage" @size-change="onSize">
       <template #cell-amount_cents="{ row }">
         <AmountText :cents="row.amount_cents" strong />
@@ -62,7 +62,10 @@ export default {
     async load() {
       this.loading = true
       try {
-        const data = await api.getRecharges({ page: this.page, size: this.size, status: this.status })
+        // 「全部」时不传 status，避免后端把空值当成某个具体状态
+        const params = { page: this.page, size: this.size }
+        if (this.status !== '') params.status = this.status
+        const data = await api.getRecharges(params)
         this.rows = data.list
         this.total = data.total
       } catch (e) {
@@ -95,8 +98,8 @@ export default {
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: var(--space);
-  margin-bottom: var(--space-md);
+  gap: var(--s-3);
+  margin-bottom: var(--s-4);
 }
 .page-head h2 {
   font-size: 22px;
@@ -104,7 +107,7 @@ export default {
   letter-spacing: -0.3px;
   margin: 0;
 }
-@media (max-width: 768px) {
+@media (max-width: 1000px) {
   .page-head {
     flex-direction: column;
     align-items: flex-start;

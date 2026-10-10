@@ -96,14 +96,14 @@ export default {
 .recharge {
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
+  gap: var(--s-4);
   max-width: 640px;
 }
 .steps-card,
 .form-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  background: var(--bg-0);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
   padding: 24px;
 }
 .steps-title {
@@ -125,7 +125,7 @@ export default {
   height: 24px;
   flex-shrink: 0;
   border-radius: 50%;
-  background: var(--accent-gradient);
+  background: var(--brand);
   color: #fff;
   font-size: 13px;
   font-weight: 700;
@@ -137,22 +137,22 @@ export default {
   display: block;
 }
 .s-body small {
-  color: var(--text-secondary);
+  color: var(--ink-3);
   font-size: 12px;
   line-height: 1.5;
 }
 .field {
-  margin-bottom: var(--space-md);
+  margin-bottom: var(--s-4);
 }
 .field-label {
   font-size: 13px;
   font-weight: 700;
-  color: var(--text-secondary);
+  color: var(--ink-3);
   margin-bottom: 8px;
 }
 .field-tip {
   font-size: 12px;
-  color: var(--text-secondary);
+  color: var(--ink-3);
   margin-top: 6px;
 }
 .submit {
@@ -161,13 +161,13 @@ export default {
 .result {
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
+  gap: var(--s-4);
 }
 .result-actions {
   display: flex;
-  gap: var(--space-sm);
+  gap: var(--s-2);
 }
-@media (max-width: 768px) {
+@media (max-width: 1000px) {
   .steps {
     grid-template-columns: 1fr 1fr;
   }

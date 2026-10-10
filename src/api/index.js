@@ -19,6 +19,9 @@ export const api = {
     const headers = token ? { Authorization: 'Bearer ' + token } : {}
     return http.post('/auth/logout', null, { headers })
   }),
+  changePassword: $(mock.changePassword, (old_password, new_password) =>
+    http.post('/auth/password', { old_password, new_password })
+  ),
 
   // 商城
   getProducts: $(mock.getProducts, (params = {}) => http.get('/shop/products', { params })),

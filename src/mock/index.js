@@ -94,6 +94,16 @@ export const mock = {
     return delay({ ok: true }, 150)
   },
 
+  changePassword(old_password, new_password) {
+    // 演示账号 demo 当前密码 demo1234
+    if (old_password !== 'demo1234') return bizError(2003, '当前密码错误')
+    if (!/^(?=.*[A-Za-z])(?=.*\d)[\s\S]{8,64}$/.test(new_password)) {
+      return bizError(1001, '新密码需 8-64 位且同时包含字母和数字', { errors: ['新密码需 8-64 位且同时包含字母和数字'] })
+    }
+    if (old_password === new_password) return bizError(1001, '新旧密码不能相同', { errors: ['新旧密码不能相同'] })
+    return delay({ ok: true }, 200)
+  },
+
   /* ── 商城（C 板块待做，先给示例数据保链路） ── */
 
   getProducts() {

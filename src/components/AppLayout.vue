@@ -1,9 +1,14 @@
 <template>
   <div class="layout">
     <!-- 顶栏 -->
-    <header class="header">
+    <header class="header" :class="{ scrolled }">
       <div class="brand" @click="$router.push('/')">
-        <span class="mark">☁</span>
+        <span class="mark">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"
+              stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </span>
         <div class="brand-text">
           <b>云平台统一门户</b>
           <small>CLOUD PORTAL</small>
@@ -44,6 +49,15 @@
 
     <!-- 内容区 -->
     <main class="content">
+      <!-- 返回上一级（当前页有父级层级时显示） -->
+      <button v-if="backTarget" class="back-btn" @click="$router.push(backTarget.path)">
+        <svg class="arrow" width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M10 3.5L5.5 8l4.5 4.5" stroke="currentColor" stroke-width="1.8"
+            stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        <span>返回{{ backTarget.label }}</span>
+      </button>
+
       <router-view v-slot="{ Component }">
         <transition name="page" mode="out-in">
           <component :is="Component" />
@@ -71,7 +85,14 @@ export default {
   name: 'AppLayout',
   components: { AmountText },
   data() {
-    return { menu: APP_MENU }
+    return { menu: APP_MENU, scrolled: false }
+  },
+  mounted() {
+    window.addEventListener('scroll', this.onScroll, { passive: true })
+    this.onScroll()
+  },
+  beforeUnmount() {
+    window.removeEventListener('scroll', this.onScroll)
   },
   computed: {
     ...mapState(useUserStore, ['user', 'balance']),
@@ -87,6 +108,14 @@ export default {
     },
     balanceCents() {
       return this.balance ? this.balance.balance_cents : null
+    },
+    // 有父级层级的页面显示「返回上一级」
+    backTarget() {
+      const p = this.$route.path
+      if (p.startsWith('/wallet/')) return { path: '/wallet', label: '钱包' }
+      if (p.startsWith('/orders/')) return { path: '/orders', label: '我的订单' }
+      if (p.startsWith('/products/')) return { path: '/products', label: '商品' }
+      return null
     }
   },
   created() {
@@ -95,6 +124,9 @@ export default {
   },
   methods: {
     ...mapActions(useUserStore, ['logout', 'refreshBalance']),
+    onScroll() {
+      this.scrolled = window.scrollY > 8
+    },
     isActive(path) {
       const p = this.$route.path
       return p === path || (path !== '/' && p.startsWith(path + '/'))
@@ -123,13 +155,18 @@ export default {
   z-index: 100;
   display: flex;
   align-items: center;
-  gap: var(--space-lg);
-  height: 64px;
-  padding: 0 var(--space-lg);
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border);
+  gap: var(--s-6);
+  height: 68px;
+  padding: 0 var(--s-6);
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.header.scrolled {
+  border-bottom: 1px solid var(--line);
+  box-shadow: var(--sh-1);
 }
 .brand {
   display: flex;
@@ -139,15 +176,14 @@ export default {
   white-space: nowrap;
 }
 .brand .mark {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 10px;
-  background: var(--accent-gradient);
+  background: var(--brand);
   display: grid;
   place-items: center;
   color: #fff;
-  font-size: 19px;
-  box-shadow: 0 6px 16px rgba(47, 107, 255, 0.35);
+  box-shadow: var(--sh-brand);
 }
 .brand-text {
   display: flex;
@@ -155,15 +191,15 @@ export default {
   line-height: 1.25;
 }
 .brand-text b {
-  font-size: 16px;
-  font-weight: 800;
-  color: var(--text-primary);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--ink);
 }
 .brand-text small {
   font-size: 10px;
-  color: var(--text-secondary);
+  color: var(--ink-4);
   font-weight: 600;
-  letter-spacing: 1.5px;
+  letter-spacing: 2px;
 }
 .nav {
   display: flex;
@@ -172,29 +208,29 @@ export default {
 }
 .nav-item {
   padding: 8px 16px;
-  border-radius: 10px;
+  border-radius: var(--r-pill);
   font-size: 15px;
-  font-weight: 600;
-  color: var(--text-secondary);
+  font-weight: 500;
+  color: var(--ink-2);
   transition: 0.2s;
 }
 .nav-item:hover {
-  color: var(--accent);
-  background: var(--soft);
+  color: var(--brand);
+  background: var(--brand-weak);
 }
 .nav-item.active {
-  color: var(--accent);
-  background: var(--soft);
+  color: var(--brand);
+  background: var(--brand-weak);
 }
 .right {
   display: flex;
   align-items: center;
-  gap: var(--space-md);
+  gap: var(--s-4);
 }
 .balance {
   cursor: pointer;
   font-size: var(--font-base);
-  color: var(--text-secondary);
+  color: var(--ink-3);
   white-space: nowrap;
 }
 .user {
@@ -203,7 +239,7 @@ export default {
   gap: 8px;
   cursor: pointer;
   font-size: var(--font-base);
-  color: var(--text-primary);
+  color: var(--ink);
   font-weight: 600;
   white-space: nowrap;
 }
@@ -211,7 +247,7 @@ export default {
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  background: var(--accent-gradient);
+  background: var(--brand);
   color: #fff;
   display: grid;
   place-items: center;
@@ -233,36 +269,80 @@ export default {
 .btn-nav.primary {
   background: var(--accent-gradient);
   color: #fff;
-  box-shadow: 0 6px 16px rgba(47, 107, 255, 0.3);
+  box-shadow: var(--sh-brand);
 }
 .btn-nav.primary:hover {
   transform: translateY(-1px);
 }
 .btn-nav.ghost {
   background: transparent;
-  color: var(--text-primary);
-  border: 1px solid var(--border);
+  color: var(--ink);
+  border: 1px solid var(--line);
 }
 .btn-nav.ghost:hover {
-  border-color: var(--accent);
-  color: var(--accent);
+  border-color: var(--brand);
+  color: var(--brand);
 }
 .content {
   flex: 1;
   width: 100%;
-  max-width: 1080px;
+  max-width: var(--wrap);
   margin: 0 auto;
-  padding: var(--space-lg);
+  padding: var(--s-6);
+}
+/* 返回上一级按钮 */
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: var(--s-4);
+  padding: 9px 20px 9px 15px;
+  background: var(--bg-0);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--ink);
+  cursor: pointer;
+  transition: all 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  box-shadow: 0 2px 8px rgba(31, 45, 61, 0.08);
+  animation: backIn 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.back-btn .arrow {
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.back-btn:hover {
+  color: var(--brand);
+  border-color: var(--brand);
+  box-shadow: 0 6px 18px rgba(65, 95, 255, 0.16);
+  transform: translateX(-3px);
+}
+.back-btn:hover .arrow {
+  transform: translateX(-3px);
+}
+.back-btn:active {
+  transform: translateX(-1px) scale(0.98);
+}
+@keyframes backIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 .tabbar {
   display: none;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 760px) {
   .header {
-    gap: var(--space-sm);
+    gap: var(--s-2);
     height: 56px;
-    padding: 0 var(--space);
+    padding: 0 var(--s-3);
   }
   .brand .mark {
     width: 30px;
@@ -278,10 +358,15 @@ export default {
   }
   .right {
     margin-left: auto;
-    gap: var(--space-sm);
+    gap: var(--s-2);
   }
   .content {
-    padding: var(--space) var(--space) calc(72px + var(--safe-bottom));
+    padding: var(--s-3) var(--s-3) calc(72px + var(--safe-bottom));
+  }
+  .back-btn {
+    padding: 8px 16px 8px 13px;
+    font-size: 13px;
+    margin-bottom: var(--s-3);
   }
   .tabbar {
     display: flex;
@@ -292,8 +377,8 @@ export default {
     z-index: 10;
     height: 56px;
     padding-bottom: var(--safe-bottom);
-    background: var(--bg-card);
-    border-top: 1px solid var(--divider);
+    background: var(--bg-0);
+    border-top: 1px solid var(--line);
   }
   .tab-item {
     flex: 1;
@@ -301,10 +386,10 @@ export default {
     align-items: center;
     justify-content: center;
     font-size: var(--font-sm);
-    color: var(--text-secondary);
+    color: var(--ink-3);
   }
   .tab-item.active {
-    color: var(--accent);
+    color: var(--brand);
     font-weight: 600;
   }
 }

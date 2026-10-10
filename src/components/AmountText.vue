@@ -42,7 +42,7 @@ export default {
 }
 .strong {
   font-weight: 600;
-  color: var(--accent);
+  color: var(--brand);
 }
 .lg {
   font-size: 22px;

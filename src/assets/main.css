@@ -1,79 +1,117 @@
 /* ============================================================
-   全局样式 + 设计 token（vivo 至简风：素雅留白 + vivo 蓝）
-   板块 A · A1 设计 token + A2 响应式断点
+   全局样式 + 设计 token（vivo 官网「至简」美学）
+   参考《网站改版提示词》：单一主色 + 高级灰 + 大圆角 + 极浅阴影 + 克制动效
    ============================================================ */
 
 :root {
-  /* ── 品牌色（vivo 蓝） ── */
-  --accent: #415fff;
-  --accent2: #5c7cff;
-  --accent-light: #7a94ff;
-  --accent-gradient: linear-gradient(135deg, #415fff 0%, #7a6bff 100%);
+  /* ── 品牌色（vivo 蓝，全站唯一主色） ── */
+  --brand: #415fff;
+  --brand-strong: #2743e6;
+  --brand-weak: #eef1ff;
+  --brand-weak-2: #dfe5ff;
+  /* 渐变只允许出现在：首屏标题关键词、CTA 主按钮、首屏主视觉光晕 */
+  --accent-gradient: linear-gradient(100deg, #415fff 0%, #7aa2ff 55%, #33d6ff 100%);
 
-  /* ── 深色底（强调区块） ── */
-  --bg-dark: #0a0f1e;
-  --bg-dark2: #111831;
+  /* ── 中性色（高级灰，带极轻冷调） ── */
+  --ink: #17181c;
+  --ink-2: #33353d;
+  --ink-3: #6b7180;
+  --ink-4: #9aa0ad;
+  --line: #eceef3;
+  --line-2: #e2e5ec;
+  --bg-0: #ffffff;
+  --bg-1: #f7f8fa;
+  --bg-2: #f1f3f7;
+  --bg-dark: #0b1020;
+  --bg-dark-2: #131a30;
 
-  /* ── 文字色 ── */
-  --text-primary: #1a1d24;
-  --text-secondary: #86909c;
-  --text-disabled: #c2c8cf;
+  /* ── 功能色（低饱和，只用于状态） ── */
+  --success: #12a56a; --success-bg: #e8f7f0;
+  --warning: #e08a1e; --warning-bg: #fdf3e4;
+  --danger: #e0455e;  --danger-bg: #fdecef;
+  --info: #415fff;    --info-bg: #eef1ff;
 
-  /* ── 背景 / 边框 ── */
-  --bg-page: #f7f8fa;
-  --bg-card: #ffffff;
-  --border: #eceef2;
-  --divider: #f2f3f5;
-  --soft: #f5f6f8;
+  /* ── 圆角（只此 6 档） ── */
+  --r-xs: 6px;
+  --r-sm: 10px;
+  --r-md: 14px;
+  --r-lg: 20px;
+  --r-xl: 28px;
+  --r-pill: 999px;
 
-  /* ── 状态色 ── */
-  --success: #00b578;
-  --warning: #ff8f1f;
-  --error: #f53f3f;
-  --info: #86909c;
-  --purple: #7a6bff;
-  --gold: #ffb400;
+  /* ── 阴影（极浅、大扩散、低透明） ── */
+  --sh-1: 0 1px 2px rgba(23, 24, 28, 0.04);
+  --sh-2: 0 8px 24px rgba(23, 24, 28, 0.05);
+  --sh-3: 0 16px 40px rgba(23, 24, 28, 0.07);
+  --sh-brand: 0 8px 22px rgba(65, 95, 255, 0.22);
 
-  /* ── 字号阶梯 ── */
+  /* ── 间距（4px 基准） ── */
+  --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px;
+  --s-5: 20px; --s-6: 24px; --s-7: 32px; --s-8: 40px;
+  --s-9: 56px; --s-10: 72px; --s-11: 96px; --s-12: 120px;
+
+  /* ── 版心与节奏 ── */
+  --wrap: 1200px;
+  --wrap-text: 720px;
+  --sec-pad: 96px;
+
+  /* ── 字号阶梯（旧命名，供既有页面引用） ── */
   --font-xs: 12px;
   --font-sm: 13px;
-  --font-base: 14px;
+  --font-base: 15px;
   --font-md: 16px;
   --font-lg: 18px;
   --font-xl: 22px;
 
-  /* ── 间距栅格 ── */
+  /* ── 兼容旧变量（既有页面过渡用，逐步替换为上面的新名） ── */
+  --accent: var(--brand);
+  --accent2: #5c7cff;
+  --accent-light: #7a94ff;
+  --text-primary: var(--ink);
+  --text-secondary: var(--ink-3);
+  --text-disabled: var(--ink-4);
+  --bg-page: var(--bg-1);
+  --bg-card: var(--bg-0);
+  --border: var(--line);
+  --divider: var(--line);
+  --soft: var(--bg-1);
+  --success: #12a56a;
+  --warning: #e08a1e;
+  --error: #e0455e;
+  --info: #6b7180;
+  --radius-sm: var(--r-sm);
+  --radius: var(--r-lg);
+  --radius-lg: var(--r-xl);
+  --shadow-sm: var(--sh-1);
+  --shadow: var(--sh-2);
+  --shadow-lg: var(--sh-3);
   --space-xs: 4px;
   --space-sm: 8px;
   --space: 12px;
   --space-md: 16px;
   --space-lg: 24px;
   --space-xl: 32px;
-
-  /* ── 圆角 / 阴影 ── */
-  --radius-sm: 10px;
-  --radius: 16px;
-  --radius-lg: 24px;
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow: 0 4px 16px rgba(31, 45, 61, 0.06);
-  --shadow-lg: 0 8px 32px rgba(31, 45, 61, 0.1);
-
-  /* ── 安全区（移动端底部） ── */
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 
-  /* ── Element Plus 主色改为 vivo 蓝 ── */
+  /* ── Element Plus 主色对齐 vivo 蓝 ── */
   --el-color-primary: #415fff;
   --el-color-primary-light-3: #c6cfff;
   --el-color-primary-light-5: #a0afff;
   --el-color-primary-light-7: #7a8fff;
   --el-color-primary-light-8: #677fff;
   --el-color-primary-light-9: #546fff;
-  --el-color-primary-dark-2: #344ccc;
+  --el-color-primary-dark-2: #2743e6;
   --el-border-radius-base: 10px;
 }
 
-/* ── 响应式断点：全站统一 768px（见 utils/breakpoint.js，勿各自另写断点） ── */
+@media (max-width: 1000px) {
+  :root { --sec-pad: 64px; }
+}
+@media (max-width: 560px) {
+  :root { --sec-pad: 48px; }
+}
 
+/* ── reset ── */
 * {
   box-sizing: border-box;
 }
@@ -86,17 +124,25 @@ body,
 }
 
 body {
-  font-family: 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
-    system-ui, -apple-system, sans-serif;
+  font-family: "PingFang SC", "HarmonyOS Sans SC", "MiSans", "Source Han Sans SC",
+    "Noto Sans SC", "Microsoft YaHei", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   font-size: var(--font-base);
-  color: var(--text-primary);
-  background: var(--bg-page);
+  color: var(--ink);
+  background: var(--bg-1);
+  font-variant-numeric: tabular-nums;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
 a {
-  color: var(--accent);
+  color: var(--brand);
   text-decoration: none;
+}
+
+/* ── 焦点态（无障碍，禁止 outline:none 而不给替代） ── */
+:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
 }
 
 /* ============================================================
@@ -108,8 +154,8 @@ a {
   opacity: 0;
   transform: translateY(24px);
   transition:
-    opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+    opacity 0.48s cubic-bezier(0.22, 0.61, 0.36, 1),
+    transform 0.48s cubic-bezier(0.22, 0.61, 0.36, 1);
   will-change: opacity, transform;
 }
 .reveal-visible {
@@ -121,8 +167,8 @@ a {
 .page-enter-active,
 .page-leave-active {
   transition:
-    opacity 0.25s ease,
-    transform 0.25s ease;
+    opacity 0.24s cubic-bezier(0.22, 0.61, 0.36, 1),
+    transform 0.24s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 .page-enter-from {
   opacity: 0;

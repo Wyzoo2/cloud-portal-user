@@ -22,6 +22,6 @@ export default {
 
 <style scoped>
 .placeholder {
-  padding: var(--space-xl) 0;
+  padding: var(--s-8) 0;
 }
 </style>

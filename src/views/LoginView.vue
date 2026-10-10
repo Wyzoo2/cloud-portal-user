@@ -3,13 +3,21 @@
     <div class="auth-panel">
       <!-- 左侧品牌区 -->
       <div class="brand-side">
-        <div class="brand-logo"><span class="mark">☁</span>云平台统一门户</div>
+        <div class="brand-logo">
+          <span class="mark">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"
+                stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </span>
+          云平台统一门户
+        </div>
         <h2>一个账号，<br />畅享云端资源</h2>
         <p>统一账号、统一钱包，云存储 / 云手机 / 云电脑 一站租齐。</p>
         <div class="brand-tags">
-          <span>⚡ 秒级开通</span>
-          <span>💰 一个钱包</span>
-          <span>🔒 安全隔离</span>
+          <span>秒级开通</span>
+          <span>一个钱包</span>
+          <span>安全隔离</span>
         </div>
       </div>
 
@@ -95,8 +103,8 @@ export default {
   justify-content: center;
   padding: 24px;
   background:
-    radial-gradient(800px 420px at 85% -10%, rgba(0, 212, 255, 0.22), transparent),
-    radial-gradient(700px 420px at 0% 0%, rgba(47, 107, 255, 0.4), transparent),
+    radial-gradient(800px 420px at 85% -10%, rgba(51, 214, 255, 0.16), transparent),
+    radial-gradient(700px 420px at 0% 0%, rgba(65, 95, 255, 0.3), transparent),
     var(--bg-dark);
 }
 .auth-panel {
@@ -104,17 +112,17 @@ export default {
   grid-template-columns: 1fr 1.15fr;
   width: 100%;
   max-width: 880px;
-  background: var(--bg-card);
-  border-radius: var(--radius-lg);
+  background: var(--bg-0);
+  border-radius: var(--r-xl);
   overflow: hidden;
-  box-shadow: 0 24px 60px rgba(5, 12, 30, 0.35);
+  box-shadow: var(--sh-3);
 }
 .brand-side {
   padding: 52px 44px;
   color: #fff;
   background:
-    radial-gradient(420px 320px at 100% 0%, rgba(0, 212, 255, 0.28), transparent),
-    linear-gradient(160deg, #0b1535, #142a5c);
+    radial-gradient(420px 320px at 100% 0%, rgba(51, 214, 255, 0.16), transparent),
+    linear-gradient(160deg, var(--bg-dark), var(--bg-dark-2));
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -123,28 +131,29 @@ export default {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-weight: 800;
+  font-weight: 600;
   font-size: 18px;
   margin-bottom: 28px;
 }
 .brand-logo .mark {
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   border-radius: 10px;
-  background: var(--accent-gradient);
+  background: var(--brand);
   display: grid;
   place-items: center;
-  font-size: 19px;
-  box-shadow: 0 6px 16px rgba(47, 107, 255, 0.4);
+  color: #fff;
+  box-shadow: var(--sh-brand);
 }
 .brand-side h2 {
   font-size: 30px;
   line-height: 1.3;
   margin: 0 0 16px;
-  font-weight: 800;
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 .brand-side p {
-  color: #b9cbee;
+  color: rgba(255, 255, 255, 0.58);
   font-size: 14px;
   line-height: 1.7;
   margin: 0 0 26px;
@@ -156,11 +165,12 @@ export default {
   gap: 8px;
 }
 .brand-tags span {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  padding: 6px 12px;
-  border-radius: 30px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  padding: 6px 14px;
+  border-radius: var(--r-pill);
   font-size: 12px;
+  color: rgba(255, 255, 255, 0.85);
 }
 .form-side {
   padding: 52px 48px;
@@ -171,9 +181,12 @@ export default {
 .form-side h1 {
   margin: 0;
   font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--ink);
 }
 .form-side .sub {
-  color: var(--text-secondary);
+  color: var(--ink-3);
   font-size: 14px;
   margin: 6px 0 28px;
 }
@@ -186,19 +199,19 @@ export default {
 .demo-tip {
   margin-top: 18px;
   font-size: 12px;
-  color: var(--text-secondary);
+  color: var(--ink-3);
   text-align: center;
-  background: var(--soft);
-  border-radius: 8px;
+  background: var(--bg-1);
+  border-radius: var(--r-sm);
   padding: 8px;
 }
 .foot {
   margin-top: 14px;
   text-align: center;
   font-size: 13px;
-  color: var(--text-secondary);
+  color: var(--ink-3);
 }
-@media (max-width: 768px) {
+@media (max-width: 1000px) {
   .auth {
     padding: 16px;
   }
