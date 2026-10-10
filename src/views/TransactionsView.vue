@@ -1,6 +1,6 @@
 <template>
   <div class="transactions">
-    <div class="page-head">
+    <div class="page-head" v-reveal>
       <h2>消费流水</h2>
       <el-radio-group v-model="type" @change="onFilter">
         <el-radio-button :value="''">全部</el-radio-button>
@@ -11,7 +11,7 @@
       </el-radio-group>
     </div>
 
-    <PagedTable :columns="columns" :rows="rows" :loading="loading" :total="total"
+    <PagedTable v-reveal="{ delay: 100 }" :columns="columns" :rows="rows" :loading="loading" :total="total"
       :page="page" :size="size" empty-text="暂无流水"
       @page-change="onPage" @size-change="onSize">
       <template #cell-type="{ row }">
@@ -124,7 +124,9 @@ export default {
   margin-bottom: var(--space-md);
 }
 .page-head h2 {
-  font-size: var(--font-lg);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
   margin: 0;
 }
 .amt-in {

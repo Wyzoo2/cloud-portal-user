@@ -44,7 +44,11 @@
 
     <!-- 内容区 -->
     <main class="content">
-      <router-view />
+      <router-view v-slot="{ Component }">
+        <transition name="page" mode="out-in">
+          <component :is="Component" />
+        </transition>
+      </router-view>
     </main>
 
     <!-- 移动端底部 Tab -->

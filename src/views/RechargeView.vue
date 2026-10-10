@@ -1,7 +1,7 @@
 <template>
   <div class="recharge">
     <!-- 流程说明 -->
-    <div class="steps-card">
+    <div class="steps-card" v-reveal>
       <div class="steps-title">充值不是即时到账，请按以下流程操作</div>
       <div class="steps">
         <div class="step" v-for="(s, i) in steps" :key="i">
@@ -12,7 +12,7 @@
     </div>
 
     <!-- 表单 -->
-    <div class="form-card">
+    <div class="form-card" v-reveal="{ delay: 100 }">
       <div class="field">
         <div class="field-label">充值金额（元）</div>
         <AmountInput v-model="amount_cents" placeholder="请输入充值金额（¥1 ~ ¥100,000）" />

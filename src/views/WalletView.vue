@@ -1,33 +1,31 @@
 <template>
   <div class="wallet">
     <!-- 余额卡片 -->
-    <div class="bal-card" v-loading="loading">
-      <div class="bal-top">
-        <span class="bal-label">账户余额</span>
-        <el-tag :type="frozen ? 'danger' : 'success'" size="small" effect="light">
-          {{ frozen ? '已冻结' : '正常' }}
-        </el-tag>
-      </div>
+    <div class="bal-card" v-loading="loading" v-reveal>
+      <div class="bal-label">账户余额</div>
       <div class="bal-amount">
         <AmountText :cents="balanceCents" />
       </div>
+      <div class="bal-meta">
+        <span class="status" :class="{ frozen }">{{ frozen ? '已冻结' : '正常' }}</span>
+        <span class="hint">预充值制账户 · 余额可用于所有产品线消费</span>
+      </div>
       <div v-if="frozen" class="frozen-tip">⚠️ 钱包已冻结，请联系平台解冻后再支付</div>
-      <div v-else class="bal-hint">预充值制账户 · 余额可用于所有产品线消费</div>
     </div>
 
     <!-- 入口 -->
     <div class="entries">
-      <div class="entry" @click="$router.push('/wallet/recharge')">
+      <div class="entry" v-reveal="{ delay: 0 }" @click="$router.push('/wallet/recharge')">
         <span class="e-ic">💰</span>
         <div class="e-body"><b>充值</b><small>线下转账 + 管理员核销</small></div>
         <span class="e-arrow">→</span>
       </div>
-      <div class="entry" @click="$router.push('/wallet/transactions')">
+      <div class="entry" v-reveal="{ delay: 100 }" @click="$router.push('/wallet/transactions')">
         <span class="e-ic">📋</span>
         <div class="e-body"><b>消费流水</b><small>每一笔进出明细</small></div>
         <span class="e-arrow">→</span>
       </div>
-      <div class="entry" @click="$router.push('/wallet/recharges')">
+      <div class="entry" v-reveal="{ delay: 200 }" @click="$router.push('/wallet/recharges')">
         <span class="e-ic">🧾</span>
         <div class="e-body"><b>充值记录</b><small>核销进度与驳回原因</small></div>
         <span class="e-arrow">→</span>
@@ -75,42 +73,51 @@ export default {
   gap: var(--space-lg);
 }
 .bal-card {
-  position: relative;
-  overflow: hidden;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  padding: 32px;
-  color: #fff;
-  background:
-    radial-gradient(600px 300px at 90% -20%, rgba(0, 212, 255, 0.35), transparent),
-    var(--accent-gradient);
-  box-shadow: var(--shadow-lg);
-}
-.bal-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 16px;
+  padding: 44px 40px;
+  box-shadow: var(--shadow-sm);
 }
 .bal-label {
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--text-secondary);
+  margin-bottom: 8px;
 }
 .bal-amount :deep(.amount) {
-  font-size: 46px;
-  font-weight: 800;
-  color: #fff;
-  letter-spacing: 0.5px;
+  font-size: 52px;
+  font-weight: 600;
+  letter-spacing: -1px;
+  color: var(--text-primary);
 }
-.bal-hint {
-  margin-top: 12px;
+.bal-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+}
+.status {
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.82);
+  font-weight: 600;
+  color: var(--success);
+  background: rgba(0, 181, 120, 0.1);
+  padding: 4px 12px;
+  border-radius: 20px;
+}
+.status.frozen {
+  color: var(--error);
+  background: rgba(245, 63, 63, 0.1);
+}
+.hint {
+  font-size: 13px;
+  color: var(--text-secondary);
 }
 .frozen-tip {
-  margin-top: 12px;
+  margin-top: 16px;
   font-size: 13px;
-  background: rgba(0, 0, 0, 0.22);
-  padding: 10px 14px;
+  color: var(--error);
+  background: rgba(245, 63, 63, 0.06);
+  padding: 12px 16px;
   border-radius: 10px;
 }
 .entries {
@@ -121,21 +128,21 @@ export default {
 .entry {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 18px;
+  gap: 14px;
+  padding: 22px 20px;
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   cursor: pointer;
-  transition: 0.2s;
+  transition: 0.25s;
+  box-shadow: var(--shadow-sm);
 }
 .entry:hover {
-  transform: translateY(-3px);
+  transform: translateY(-4px);
   box-shadow: var(--shadow);
-  border-color: transparent;
 }
 .e-ic {
-  font-size: 26px;
+  font-size: 28px;
 }
 .e-body {
   flex: 1;
@@ -144,25 +151,31 @@ export default {
 }
 .e-body b {
   font-size: 15px;
+  font-weight: 600;
 }
 .e-body small {
   color: var(--text-secondary);
   font-size: 12px;
-  margin-top: 2px;
+  margin-top: 3px;
 }
 .e-arrow {
-  color: var(--text-secondary);
+  color: var(--text-disabled);
   font-size: 18px;
+  transition: 0.2s;
+}
+.entry:hover .e-arrow {
+  color: var(--accent);
+  transform: translateX(3px);
 }
 @media (max-width: 768px) {
   .entries {
     grid-template-columns: 1fr;
   }
   .bal-card {
-    padding: 24px;
+    padding: 32px 24px;
   }
   .bal-amount :deep(.amount) {
-    font-size: 36px;
+    font-size: 40px;
   }
 }
 </style>

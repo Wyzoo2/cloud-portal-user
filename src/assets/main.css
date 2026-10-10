@@ -1,38 +1,38 @@
 /* ============================================================
-   全局样式 + 科技蓝设计 token（庐云风：品牌蓝 → 青渐变）
+   全局样式 + 设计 token（vivo 至简风：素雅留白 + vivo 蓝）
    板块 A · A1 设计 token + A2 响应式断点
    ============================================================ */
 
 :root {
-  /* ── 品牌色（蓝 → 青渐变） ── */
-  --accent: #2f6bff;
-  --accent2: #00d4ff;
-  --accent-light: #5e8dff;
-  --accent-gradient: linear-gradient(120deg, #2f6bff 0%, #00d4ff 100%);
+  /* ── 品牌色（vivo 蓝） ── */
+  --accent: #415fff;
+  --accent2: #5c7cff;
+  --accent-light: #7a94ff;
+  --accent-gradient: linear-gradient(135deg, #415fff 0%, #7a6bff 100%);
 
-  /* ── 深色底（hero / 强调区块） ── */
-  --bg-dark: #0a1128;
-  --bg-dark2: #0e1838;
+  /* ── 深色底（强调区块） ── */
+  --bg-dark: #0a0f1e;
+  --bg-dark2: #111831;
 
   /* ── 文字色 ── */
-  --text-primary: #0f1f3d;
-  --text-secondary: #5a6b85;
-  --text-disabled: #b8bcc4;
+  --text-primary: #1a1d24;
+  --text-secondary: #86909c;
+  --text-disabled: #c2c8cf;
 
   /* ── 背景 / 边框 ── */
-  --bg-page: #f3f6fc;
+  --bg-page: #f7f8fa;
   --bg-card: #ffffff;
-  --border: #e7ecf5;
-  --divider: #eef0f2;
-  --soft: #f4f7fe;
+  --border: #eceef2;
+  --divider: #f2f3f5;
+  --soft: #f5f6f8;
 
   /* ── 状态色 ── */
-  --success: #18b87a;
-  --warning: #ff8a34;
-  --error: #ff5470;
-  --info: #8c93a1;
-  --purple: #7a5af8;
-  --gold: #f5b53d;
+  --success: #00b578;
+  --warning: #ff8f1f;
+  --error: #f53f3f;
+  --info: #86909c;
+  --purple: #7a6bff;
+  --gold: #ffb400;
 
   /* ── 字号阶梯 ── */
   --font-xs: 12px;
@@ -53,22 +53,22 @@
   /* ── 圆角 / 阴影 ── */
   --radius-sm: 10px;
   --radius: 16px;
-  --radius-lg: 20px;
-  --shadow-sm: 0 1px 4px rgba(16, 42, 92, 0.06);
-  --shadow: 0 10px 30px rgba(16, 42, 92, 0.08);
-  --shadow-lg: 0 20px 40px rgba(16, 42, 92, 0.14);
+  --radius-lg: 24px;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow: 0 4px 16px rgba(31, 45, 61, 0.06);
+  --shadow-lg: 0 8px 32px rgba(31, 45, 61, 0.1);
 
   /* ── 安全区（移动端底部） ── */
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 
-  /* ── Element Plus 主色改为品牌蓝 ── */
-  --el-color-primary: #2f6bff;
-  --el-color-primary-light-3: #c1d3ff;
-  --el-color-primary-light-5: #97b5ff;
-  --el-color-primary-light-7: #6d97ff;
-  --el-color-primary-light-8: #5989ff;
-  --el-color-primary-light-9: #447aff;
-  --el-color-primary-dark-2: #2656cc;
+  /* ── Element Plus 主色改为 vivo 蓝 ── */
+  --el-color-primary: #415fff;
+  --el-color-primary-light-3: #c6cfff;
+  --el-color-primary-light-5: #a0afff;
+  --el-color-primary-light-7: #7a8fff;
+  --el-color-primary-light-8: #677fff;
+  --el-color-primary-light-9: #546fff;
+  --el-color-primary-dark-2: #344ccc;
   --el-border-radius-base: 10px;
 }
 
@@ -97,4 +97,56 @@ body {
 a {
   color: var(--accent);
   text-decoration: none;
+}
+
+/* ============================================================
+   动效：滚动浮现 + 路由过渡 + 无障碍降级
+   ============================================================ */
+
+/* ── 滚动浮现（配合 v-reveal 指令） ── */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+.reveal-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── 路由切换过渡（页面淡入上移） ── */
+.page-enter-active,
+.page-leave-active {
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease;
+}
+.page-enter-from {
+  opacity: 0;
+  transform: translateY(10px);
+}
+.page-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
+/* ── 无障碍：尊重系统「减弱动态效果」偏好 ── */
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .page-enter-active,
+  .page-leave-active {
+    transition: none;
+  }
+  .page-enter-from,
+  .page-leave-to {
+    opacity: 1;
+    transform: none;
+  }
 }

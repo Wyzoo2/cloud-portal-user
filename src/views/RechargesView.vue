@@ -1,6 +1,6 @@
 <template>
   <div class="recharges">
-    <div class="page-head">
+    <div class="page-head" v-reveal>
       <h2>充值记录</h2>
       <el-radio-group v-model="status" @change="onFilter">
         <el-radio-button :value="''">全部</el-radio-button>
@@ -10,7 +10,7 @@
       </el-radio-group>
     </div>
 
-    <PagedTable :columns="columns" :rows="rows" :loading="loading" :total="total"
+    <PagedTable v-reveal="{ delay: 100 }" :columns="columns" :rows="rows" :loading="loading" :total="total"
       :page="page" :size="size" empty-text="暂无充值记录"
       @page-change="onPage" @size-change="onSize">
       <template #cell-amount_cents="{ row }">
@@ -99,7 +99,9 @@ export default {
   margin-bottom: var(--space-md);
 }
 .page-head h2 {
-  font-size: var(--font-lg);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
   margin: 0;
 }
 @media (max-width: 768px) {
