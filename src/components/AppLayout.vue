@@ -11,18 +11,29 @@
       </nav>
 
       <div class="right">
-        <div class="balance" @click="$router.push('/wallet')">
-          余额 <AmountText :cents="balanceCents" strong />
-        </div>
-        <el-dropdown @command="onCommand">
-          <span class="user">{{ username }}</span>
-          <template #dropdown>
-            <el-dropdown-menu>
-              <el-dropdown-item command="profile">我的</el-dropdown-item>
-              <el-dropdown-item command="logout" divided>退出登录</el-dropdown-item>
-            </el-dropdown-menu>
-          </template>
-        </el-dropdown>
+        <!-- 已登录：余额常驻 + 用户菜单 -->
+        <template v-if="loggedIn">
+          <div class="balance" @click="$router.push('/wallet')">
+            余额 <AmountText :cents="balanceCents" strong />
+          </div>
+          <el-dropdown @command="onCommand">
+            <span class="user">{{ username }}</span>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item command="profile">我的</el-dropdown-item>
+                <el-dropdown-item command="logout" divided>退出登录</el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+        </template>
+
+        <!-- 游客：显示登录 / 注册入口（首页与商品页游客可看） -->
+        <template v-else>
+          <el-button text @click="$router.push({ name: 'login', query: { redirect: $route.fullPath } })">
+            登录
+          </el-button>
+          <el-button type="primary" @click="$router.push({ name: 'register' })">注册</el-button>
+        </template>
       </div>
     </header>
 
@@ -44,6 +55,7 @@
 <script>
 import { mapState, mapActions } from 'pinia'
 import { useUserStore } from '../store'
+import { storage } from '../utils/storage'
 import AmountText from './AmountText.vue'
 import { APP_MENU } from '../utils/constants'
 
@@ -55,15 +67,25 @@ export default {
   },
   computed: {
     ...mapState(useUserStore, ['user', 'balance']),
+    loggedIn() {
+      return !!this.user
+    },
     username() {
-      return (this.user && this.user.username) || '未登录'
+      return (this.user && this.user.username) || ''
     },
     balanceCents() {
       return this.balance ? this.balance.balance_cents : null
     }
   },
+  watch: {
+    // 登录后（布局壳未重新挂载的情况）补拉一次余额
+    user(u, old) {
+      if (u && !old) this.refreshBalance()
+    }
+  },
   created() {
-    this.refreshBalance()
+    // 游客不拉余额：/wallet/balance 需要登录，游客拉会拿到 1002
+    if (storage.token) this.refreshBalance()
   },
   methods: {
     ...mapActions(useUserStore, ['logout', 'refreshBalance']),

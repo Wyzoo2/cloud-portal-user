@@ -13,6 +13,9 @@ export const api = {
   // 商城
   getProducts: (params = {}) => http.get('/shop/products', { params }),
   createOrder: items => http.post('/shop/orders', { items }),
+  // ⚠️ 订单列表：契约里没有定义这个接口，字段形状以后端真实样例为准。
+  // 页面侧所有字段适配都收敛在 OrdersView.vue 的 normalizeRow() 里，接口变了只改那一处。
+  getOrders: (params = {}) => http.get('/shop/orders', { params }),
   getOrder: id => http.get(`/shop/orders/${id}`),
   payOrder: id => http.post(`/shop/orders/${id}/pay`),
 
