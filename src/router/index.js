@@ -11,6 +11,10 @@ import RegisterView from '../views/RegisterView.vue'
 import HomeView from '../views/HomeView.vue'
 import ProductsView from '../views/ProductsView.vue'
 import OrdersView from '../views/OrdersView.vue'
+import WalletView from '../views/WalletView.vue'
+import TransactionsView from '../views/TransactionsView.vue'
+import RechargeView from '../views/RechargeView.vue'
+import RechargesView from '../views/RechargesView.vue'
 import PlaceholderView from '../views/PlaceholderView.vue'
 
 export const router = createRouter({
@@ -28,10 +32,10 @@ export const router = createRouter({
         { path: 'orders', name: 'orders', component: OrdersView, meta: { title: '我的订单' } },
         // ⚠️ 临时占位：订单详情页由 D 组实现。C2 下单成功后要跳这里，先给出路由
         { path: 'orders/:id', name: 'order-detail', component: PlaceholderView, meta: { title: '订单详情' } },
-        { path: 'wallet', name: 'wallet', component: PlaceholderView, meta: { title: '钱包' } },
-        { path: 'wallet/transactions', name: 'transactions', component: PlaceholderView, meta: { title: '消费流水' } },
-        { path: 'wallet/recharge', name: 'recharge', component: PlaceholderView, meta: { title: '充值' } },
-        { path: 'wallet/recharges', name: 'recharges', component: PlaceholderView, meta: { title: '充值记录' } },
+        { path: 'wallet', name: 'wallet', component: WalletView },
+        { path: 'wallet/transactions', name: 'transactions', component: TransactionsView },
+        { path: 'wallet/recharge', name: 'recharge', component: RechargeView },
+        { path: 'wallet/recharges', name: 'recharges', component: RechargesView },
         { path: 'profile', name: 'profile', component: PlaceholderView, meta: { title: '我的' } }
       ]
     },
@@ -40,9 +44,12 @@ export const router = createRouter({
 })
 
 router.beforeEach(to => {
-  // 需要登录的页面：带上 redirect，登录后能回到原来这一页
-  if (!to.meta.public && !storage.token) {
+  // 受保护页（无 meta.public）未登录 → 去登录，并带上回跳地址
+  if (!to.meta.public && !storage.token)
     return { name: 'login', query: { redirect: to.fullPath } }
-  }
-  if (to.name === 'login' && storage.token) return { name: 'home' }
+  // 已登录访问登录页 → 优先回 redirect 指的地方（只认站内路径），否则回首页
+  if (to.name === 'login' && storage.token)
+    return to.query.redirect && String(to.query.redirect).startsWith('/')
+      ? to.query.redirect
+      : { name: 'home' }
 })

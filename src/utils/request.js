@@ -57,12 +57,11 @@ http.interceptors.response.use(
         }
       }
 
-      // 1002 未认证 / token 无效
-      // 注意：游客本来就没 token，在公开页面（首页/商品页）上收到 1002 是正常的，
-      // 不能硬跳登录页，否则游客一打开商品页就被弹走。只有"登录过但 token 失效"才踢。
+      // 1002 未认证 / token 无效 → 踢回登录
       if (body.code === 1002) {
         const hadToken = !!storage.token
         storage.clear()
+        // 只有「曾有 token 却失效」才整页跳登录；游客在公开页触到 1002 是预期，静默即可
         if (hadToken && window.location.pathname !== '/login') window.location.href = '/login'
       }
 
