@@ -1,7 +1,7 @@
 <template>
   <div class="recharge">
     <!-- 流程说明 -->
-    <div class="steps-card">
+    <div class="steps-card" v-reveal>
       <div class="steps-title">充值不是即时到账，请按以下流程操作</div>
       <div class="steps">
         <div class="step" v-for="(s, i) in steps" :key="i">
@@ -12,7 +12,7 @@
     </div>
 
     <!-- 表单 -->
-    <div class="form-card">
+    <div class="form-card" v-reveal="{ delay: 100 }">
       <div class="field">
         <div class="field-label">充值金额（元）</div>
         <AmountInput v-model="amount_cents" placeholder="请输入充值金额（¥1 ~ ¥100,000）" />
@@ -96,14 +96,14 @@ export default {
 .recharge {
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
+  gap: var(--s-4);
   max-width: 640px;
 }
 .steps-card,
 .form-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  background: var(--bg-0);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
   padding: 24px;
 }
 .steps-title {
@@ -125,7 +125,7 @@ export default {
   height: 24px;
   flex-shrink: 0;
   border-radius: 50%;
-  background: var(--accent-gradient);
+  background: var(--brand);
   color: #fff;
   font-size: 13px;
   font-weight: 700;
@@ -137,22 +137,22 @@ export default {
   display: block;
 }
 .s-body small {
-  color: var(--text-secondary);
+  color: var(--ink-3);
   font-size: 12px;
   line-height: 1.5;
 }
 .field {
-  margin-bottom: var(--space-md);
+  margin-bottom: var(--s-4);
 }
 .field-label {
   font-size: 13px;
   font-weight: 700;
-  color: var(--text-secondary);
+  color: var(--ink-3);
   margin-bottom: 8px;
 }
 .field-tip {
   font-size: 12px;
-  color: var(--text-secondary);
+  color: var(--ink-3);
   margin-top: 6px;
 }
 .submit {
@@ -161,13 +161,13 @@ export default {
 .result {
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
+  gap: var(--s-4);
 }
 .result-actions {
   display: flex;
-  gap: var(--space-sm);
+  gap: var(--s-2);
 }
-@media (max-width: 768px) {
+@media (max-width: 1000px) {
   .steps {
     grid-template-columns: 1fr 1fr;
   }

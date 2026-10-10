@@ -52,7 +52,7 @@ http.interceptors.response.use(
           return http(resp.config)
         } catch (e) {
           storage.clear()
-          if (window.location.pathname !== '/login') window.location.href = '/login'
+          if (window.location.pathname !== '/login') window.location.href = '/login?expired=1'
           return Promise.reject(new Error('登录已过期，请重新登录'))
         }
       }
@@ -62,7 +62,7 @@ http.interceptors.response.use(
         const hadToken = !!storage.token
         storage.clear()
         // 只有「曾有 token 却失效」才整页跳登录；游客在公开页触到 1002 是预期，静默即可
-        if (hadToken && window.location.pathname !== '/login') window.location.href = '/login'
+        if (hadToken && window.location.pathname !== '/login') window.location.href = '/login?expired=1'
       }
 
       // 其余业务错误：抛出整个 body，页面用 catch (e) 拿 e.code / e.message / e.data

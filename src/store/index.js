@@ -32,11 +32,15 @@ export const useUserStore = defineStore('user', () => {
   }
 
   function logout() {
-    // 先同步清本地（立即生效，避免路由守卫仍读到 token），再异步通知服务端吊销 refresh cookie
+    // 先存 token → 同步清本地（立即生效，避免路由守卫仍读到 token）→ 用存下的 token 调登出
+    const token = storage.token
     storage.clear()
     user.value = null
     balance.value = null
-    api.logout().catch(() => {})
+    // 后端 logout 需要 Bearer，这里手动带上已保存的 token 吊销服务端 refresh cookie
+    if (token) {
+      api.logout(token).catch(() => {})
+    }
   }
 
   /** 拉取余额（布局壳常驻显示、支付/充值后刷新） */

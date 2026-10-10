@@ -1,29 +1,36 @@
 <template>
   <div class="home">
-    <!-- Hero：深色 + 渐变光晕 -->
+    <!-- Hero：深色首屏 + 光晕 -->
     <section class="hero">
       <div class="hero-grid">
-        <div class="hero-text">
-          <h1>一个平台，租遍<br /><span>云存储 · 云手机 · 云电脑</span></h1>
-          <p>统一账号、统一钱包、统一门户。预充值即用，资源即开即用，像用水用电一样简单。</p>
+        <!-- 左栏文字 -->
+        <div class="hero-text" v-reveal>
+          <div class="hero-kicker">CLOUD PORTAL</div>
+          <h1>一个平台，租遍<br /><span class="grad">云存储 · 云手机 · 云电脑</span></h1>
+          <p class="hero-sub">统一账号、统一钱包，资源即开即用</p>
           <div class="hero-tags">
-            <span>⚡ 秒级开通</span>
-            <span>💰 一个钱包畅享全线</span>
-            <span>🔒 安全隔离</span>
-            <span>🛠 7×24 运维</span>
+            <span>秒级开通</span>
+            <span>一个钱包</span>
+            <span>安全隔离</span>
+            <span>7×24 运维</span>
           </div>
           <div class="hero-cta">
             <button class="btn-hero primary" @click="$router.push(isLoggedIn ? '/products' : '/register')">
-              {{ isLoggedIn ? '浏览商品' : '免费注册' }}
+              {{ isLoggedIn ? '浏览商品' : '立即开始' }}
             </button>
-            <button v-if="!isLoggedIn" class="btn-hero ghost" @click="$router.push('/login')">登录</button>
+            <button class="btn-hero ghost" @click="$router.push('/products')">了解产品</button>
           </div>
         </div>
+
+        <!-- 右栏玻璃数据卡 -->
         <div class="hero-card">
-          <h4>实时资源看板（示例）</h4>
+          <h4>实时资源看板 <span class="demo-tag">示例</span></h4>
           <div class="hc-row" v-for="r in panel" :key="r.name">
             <div class="hc-l">
-              <span class="ic" :style="{ background: r.bg }">{{ r.ic }}</span>
+              <span class="ic">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+                  stroke-linecap="round" stroke-linejoin="round" v-html="r.path"></svg>
+              </span>
               <div><b>{{ r.name }}</b><small>{{ r.small }}</small></div>
             </div>
             <span class="hc-num">{{ r.num }} <em>{{ r.unit }}</em></span>
@@ -32,9 +39,9 @@
       </div>
     </section>
 
-    <!-- 统计条 -->
+    <!-- 统计条（浮起白卡） -->
     <div class="stats">
-      <div class="stats-card">
+      <div class="stats-card" v-reveal>
         <div class="stat" v-for="s in stats" :key="s.t">
           <b>{{ s.v }}</b><small>{{ s.t }}</small>
         </div>
@@ -42,49 +49,52 @@
     </div>
 
     <!-- 产品线 -->
-    <section class="block">
-      <div class="sec-head">
+    <section class="section">
+      <div class="sec-head" v-reveal>
         <div class="kicker">PRODUCTS</div>
-        <h2>三条产品线，一站租齐</h2>
-        <p>一个账号一个钱包，按需组合、弹性伸缩。</p>
+        <h2>产品与服务</h2>
+        <p>三条产品线，一站租齐</p>
       </div>
       <div class="prod-grid">
-        <div class="prod-card" v-for="p in lines" :key="p.code" @click="$router.push('/products')">
-          <div class="prod-ic" :style="{ background: p.grad }">{{ p.ic }}</div>
+        <div class="prod-card" v-for="(p, i) in lines" :key="p.code" v-reveal="{ delay: i * 100 }"
+          @click="$router.push('/products')">
+          <div class="prod-visual">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+              stroke-linecap="round" stroke-linejoin="round" v-html="p.path"></svg>
+          </div>
           <h3>{{ p.name }}</h3>
-          <div class="desc">{{ p.desc }}</div>
-          <div class="from"><small>了解更多</small><span class="go">选购 →</span></div>
+          <p class="desc">{{ p.desc }}</p>
+          <span class="go">了解更多<i class="go-arrow">→</i></span>
         </div>
       </div>
     </section>
 
-    <!-- 为什么选 -->
-    <section class="block">
-      <div class="sec-head">
-        <div class="kicker">WHY US</div>
-        <h2>为什么选择我们</h2>
-      </div>
+    <!-- 为什么选择（深色收口） -->
+    <section class="section">
       <div class="why">
-        <div class="why-head">一站式弹性云资源平台，<br />把复杂留给平台，把简单交给客户。</div>
+        <div class="why-head" v-reveal>
+          <h2>把复杂留给平台<br />把简单交给客户</h2>
+        </div>
         <div class="why-grid">
-          <div class="why-it" v-for="w in whys" :key="w.t">
-            <div class="w-ic">{{ w.ic }}</div>
-            <h4>{{ w.t }}</h4>
-            <p>{{ w.d }}</p>
+          <div class="why-it" v-for="(f, i) in feats" :key="f.t" v-reveal="{ delay: i * 100 }">
+            <div class="w-ic">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+                stroke-linecap="round" stroke-linejoin="round" v-html="f.path"></svg>
+            </div>
+            <h4>{{ f.t }}</h4>
+            <p>{{ f.d }}</p>
           </div>
         </div>
       </div>
     </section>
 
     <!-- CTA -->
-    <section class="block cta-block">
-      <div class="cta-band">
-        <div>
-          <h3>准备好把资源搬上云了吗？</h3>
-          <p>注册即享一个钱包，畅享三条产品线。</p>
-        </div>
-        <button class="cta-btn" @click="$router.push(isLoggedIn ? '/products' : '/register')">
-          {{ isLoggedIn ? '浏览商品' : '免费开始' }}
+    <section class="section cta-section">
+      <div class="cta" v-reveal>
+        <h3>准备好开始了吗？</h3>
+        <p>注册即享一个钱包，畅享三条产品线</p>
+        <button class="btn-hero primary" @click="$router.push(isLoggedIn ? '/products' : '/register')">
+          {{ isLoggedIn ? '浏览商品' : '免费注册' }}
         </button>
       </div>
     </section>
@@ -95,10 +105,31 @@
 import { mapState } from 'pinia'
 import { useUserStore } from '../store'
 
+const ICONS = {
+  storage: '<path d="M22 12H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><path d="M6 16h.01"/><path d="M10 16h.01"/>',
+  phone: '<rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/>',
+  desktop: '<rect width="20" height="14" x="2" y="3" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/>',
+  layers: '<path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/>',
+  zap: '<path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/>',
+  shield: '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>'
+}
+
 const LINES = [
-  { code: 'storage', name: '云存储', ic: '💾', grad: 'linear-gradient(135deg,#ff8a34,#ffb072)', desc: '对象存储 / 云硬盘 / 企业网盘，多副本加密、冷热分层，海量数据安全存。' },
-  { code: 'phone', name: '云手机', ic: '📱', grad: 'linear-gradient(135deg,#2f6bff,#5e8dff)', desc: '云端安卓实例，独立 IP、多开群控、ADB 调试，数字员工 / 云测 / 直播矩阵利器。' },
-  { code: 'desktop', name: '云电脑', ic: '🖥', grad: 'linear-gradient(135deg,#00b8d4,#4de3f0)', desc: 'Windows / Linux 云桌面，多端串流、外设重定向，安全办公、开发设计上云。' }
+  { code: 'storage', name: '云存储', path: ICONS.storage, desc: '对象存储 / 云硬盘 / 企业网盘，海量数据安全存。' },
+  { code: 'phone', name: '云手机', path: ICONS.phone, desc: '云端安卓实例，多开群控、ADB 调试，即开即用。' },
+  { code: 'desktop', name: '云电脑', path: ICONS.desktop, desc: 'Windows / Linux 云桌面，安全办公、开发上云。' }
+]
+
+const FEATS = [
+  { path: ICONS.layers, t: '一站齐租', d: '三条产品线一个账号一个钱包，交叉组合满足完整业务链路。' },
+  { path: ICONS.zap, t: '秒级交付', d: '资源在线即开即用，弹性伸缩，业务快速上线。' },
+  { path: ICONS.shield, t: '安全合规', d: '多租户隔离、数据加密、操作审计，等保合规。' }
+]
+
+const PANEL = [
+  { name: '云手机', small: '在线实例', num: '3,860', unit: '台', path: ICONS.phone },
+  { name: '云电脑', small: '在线桌面', num: '1,240', unit: '台', path: ICONS.desktop },
+  { name: '云存储', small: '已分配容量', num: '1.62', unit: 'PB', path: ICONS.storage }
 ]
 
 const STATS = [
@@ -108,25 +139,10 @@ const STATS = [
   { v: '秒级', t: '资源开通' }
 ]
 
-const PANEL = [
-  { ic: '📱', name: '云手机', small: '在线实例', num: '3,860', unit: '台', bg: 'rgba(47,107,255,.25)' },
-  { ic: '🖥', name: '云电脑', small: '在线桌面', num: '1,240', unit: '台', bg: 'rgba(0,212,255,.22)' },
-  { ic: '💾', name: '云存储', small: '已分配容量', num: '1.62', unit: 'PB', bg: 'rgba(255,138,52,.25)' }
-]
-
-const WHYS = [
-  { ic: '🔗', t: '一站齐租', d: '三条产品线一个账号一个钱包，交叉组合满足完整业务链路。' },
-  { ic: '📉', t: '成本更优', d: '统一资源池错峰调度，预充值 + 多种计费方式，更省。' },
-  { ic: '🚀', t: '秒级交付', d: '资源在线即开即用，弹性伸缩，业务快速上线。' },
-  { ic: '🔒', t: '安全合规', d: '多租户隔离、数据加密、操作审计，等保合规。' },
-  { ic: '🌐', t: '统一门户', d: '售卖与计费统一，充值一次全线通用。' },
-  { ic: '🤝', t: '贴身服务', d: '7×24 运维，明确 SLA，比大厂更懂你的业务。' }
-]
-
 export default {
   name: 'HomeView',
   data() {
-    return { lines: LINES, stats: STATS, panel: PANEL, whys: WHYS }
+    return { lines: LINES, feats: FEATS, panel: PANEL, stats: STATS }
   },
   computed: {
     ...mapState(useUserStore, ['user']),
@@ -141,57 +157,69 @@ export default {
 .home {
   display: flex;
   flex-direction: column;
-  gap: var(--space-lg);
 }
 
-/* ===== Hero ===== */
+/* ===== Hero：深色 + 光晕 ===== */
 .hero {
-  position: relative;
-  overflow: hidden;
-  border-radius: var(--radius-lg);
+  margin: calc(-1 * var(--s-6)) calc(50% - 50vw) 0;
+  padding: 96px 24px 120px;
   background:
-    radial-gradient(800px 420px at 82% -10%, rgba(0, 212, 255, 0.22), transparent),
-    radial-gradient(720px 420px at 0% 0%, rgba(47, 107, 255, 0.4), transparent),
+    radial-gradient(1100px 520px at 78% -12%, rgba(65, 95, 255, 0.3), transparent),
+    radial-gradient(800px 420px at 6% 0%, rgba(51, 214, 255, 0.16), transparent),
     var(--bg-dark);
   color: #fff;
-  padding: 64px 48px 72px;
 }
 .hero-grid {
+  max-width: var(--wrap);
+  margin: 0 auto;
   display: grid;
   grid-template-columns: 1.1fr 0.9fr;
   gap: 48px;
   align-items: center;
 }
-.hero h1 {
-  font-size: 42px;
-  line-height: 1.2;
-  font-weight: 800;
-  margin: 0 0 18px;
+.hero-kicker {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: var(--brand-weak);
+  padding: 5px 14px;
+  border-radius: var(--r-pill);
+  margin-bottom: 20px;
 }
-.hero h1 span {
-  background: linear-gradient(90deg, #7fd4ff, #fff);
+.hero h1 {
+  font-size: clamp(34px, 4.6vw, 56px);
+  line-height: 1.15;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0 0 18px;
+  color: #fff;
+}
+.hero h1 .grad {
+  background: var(--accent-gradient);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
-.hero-text p {
+.hero-sub {
   font-size: 16px;
-  color: #c9d8f5;
-  margin: 0 0 22px;
-  max-width: 560px;
+  color: rgba(255, 255, 255, 0.66);
+  margin: 0 0 24px;
+  max-width: 360px;
 }
 .hero-tags {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  margin-bottom: 28px;
+  margin-bottom: 30px;
 }
 .hero-tags span {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  padding: 6px 14px;
-  border-radius: 30px;
   font-size: 13px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  padding: 6px 14px;
+  border-radius: var(--r-pill);
+  color: rgba(255, 255, 255, 0.85);
 }
 .hero-cta {
   display: flex;
@@ -200,307 +228,327 @@ export default {
 .btn-hero {
   border: 0;
   cursor: pointer;
-  font-weight: 700;
-  border-radius: 10px;
-  padding: 13px 28px;
+  font-weight: 600;
+  border-radius: var(--r-pill);
+  padding: 14px 30px;
   font-size: 16px;
-  transition: 0.2s;
+  transition: 0.22s cubic-bezier(0.22, 0.61, 0.36, 1);
   font-family: inherit;
 }
 .btn-hero.primary {
   background: var(--accent-gradient);
   color: #fff;
-  box-shadow: 0 6px 16px rgba(47, 107, 255, 0.3);
+  box-shadow: var(--sh-brand);
 }
 .btn-hero.primary:hover {
-  transform: translateY(-2px);
+  transform: translateY(-1px);
 }
 .btn-hero.ghost {
-  background: rgba(255, 255, 255, 0.1);
+  background: transparent;
   color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.22);
 }
 .btn-hero.ghost:hover {
-  background: rgba(255, 255, 255, 0.18);
+  background: #fff;
+  color: var(--ink);
+  border-color: #fff;
 }
 
-/* hero 浮动看板 */
+/* 玻璃数据卡 */
 .hero-card {
-  background: rgba(255, 255, 255, 0.07);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: 20px;
-  padding: 22px;
-  backdrop-filter: blur(8px);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--r-xl);
+  padding: 24px;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  animation: float 6s ease-in-out infinite;
 }
 .hero-card h4 {
   font-size: 14px;
-  color: #9fc0f0;
-  margin: 0 0 12px;
   font-weight: 600;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.hero-card .demo-tag {
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  padding: 1px 8px;
+  border-radius: var(--r-pill);
 }
 .hc-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 0;
-  border-bottom: 1px dashed rgba(255, 255, 255, 0.12);
+  padding: 14px 0;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
 }
 .hc-row:last-child {
-  border: 0;
+  border-bottom: 0;
 }
 .hc-l {
   display: flex;
   align-items: center;
 }
 .hc-l .ic {
-  width: 38px;
-  height: 38px;
-  border-radius: 11px;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
   display: grid;
   place-items: center;
-  font-size: 18px;
+  color: #fff;
   margin-right: 12px;
+}
+.hc-l .ic svg {
+  width: 18px;
+  height: 18px;
 }
 .hc-l b {
   font-size: 15px;
+  font-weight: 600;
 }
 .hc-l small {
   display: block;
-  color: #9fc0f0;
+  color: rgba(255, 255, 255, 0.5);
   font-size: 12px;
 }
 .hc-num {
-  font-weight: 800;
-  font-size: 16px;
+  font-size: 18px;
+  font-weight: 700;
 }
 .hc-num em {
   font-style: normal;
-  color: #7fe0a8;
   font-size: 12px;
-  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 400;
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
 }
 
-/* ===== 统计条 ===== */
+/* ===== 统计条（浮起白卡） ===== */
 .stats {
-  margin-top: -34px;
+  max-width: var(--wrap);
+  margin: -56px auto 0;
+  padding: 0 24px;
   position: relative;
   z-index: 5;
-  padding: 0 8px;
 }
 .stats-card {
-  background: var(--bg-card);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  background: var(--bg-0);
+  border-radius: var(--r-lg);
+  box-shadow: var(--sh-2);
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  padding: 10px;
 }
 .stat {
-  padding: 22px 24px;
+  padding: 26px 24px;
   text-align: center;
-  border-right: 1px solid var(--line, var(--border));
+  border-right: 1px solid var(--line);
 }
 .stat:last-child {
-  border: 0;
+  border-right: 0;
 }
 .stat b {
-  font-size: 28px;
-  font-weight: 800;
-  background: var(--accent-gradient);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--ink);
 }
 .stat small {
   display: block;
-  color: var(--text-secondary);
+  color: var(--ink-3);
   font-size: 13px;
   margin-top: 4px;
 }
 
 /* ===== 通用 section ===== */
-.block {
-  padding: 24px 0;
+.section {
+  padding: var(--sec-pad) 0;
 }
 .sec-head {
   text-align: center;
-  margin-bottom: 36px;
+  margin-bottom: 48px;
 }
 .sec-head .kicker {
-  color: var(--accent);
+  color: var(--brand);
   font-weight: 700;
-  letter-spacing: 3px;
-  font-size: 13px;
+  letter-spacing: 0.16em;
+  font-size: 12px;
+  text-transform: uppercase;
 }
 .sec-head h2 {
-  font-size: 30px;
-  font-weight: 800;
-  margin: 8px 0 12px;
+  font-size: clamp(26px, 3vw, 40px);
+  line-height: 1.25;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 10px 0 12px;
+  color: var(--ink);
 }
 .sec-head p {
-  color: var(--text-secondary);
-  max-width: 640px;
-  margin: 0 auto;
+  color: var(--ink-3);
+  font-size: 15px;
+  margin: 0;
+  max-width: var(--wrap-text);
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* ===== 产品卡片 ===== */
 .prod-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 22px;
+  gap: 24px;
 }
 .prod-card {
-  background: var(--bg-card);
-  border-radius: var(--radius);
-  padding: 28px 24px;
-  box-shadow: var(--shadow);
-  border: 1px solid var(--border);
-  transition: 0.25s;
+  background: var(--bg-0);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 32px 28px;
   cursor: pointer;
+  transition: 0.22s cubic-bezier(0.22, 0.61, 0.36, 1);
+  box-shadow: var(--sh-1);
   position: relative;
-  overflow: hidden;
 }
 .prod-card:hover {
-  transform: translateY(-6px);
-  box-shadow: var(--shadow-lg);
+  transform: translateY(-4px);
+  box-shadow: var(--sh-3);
+  border-color: var(--line-2);
 }
-.prod-card::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: var(--accent-gradient);
-}
-.prod-ic {
-  width: 56px;
-  height: 56px;
-  border-radius: 15px;
+.prod-visual {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  background: var(--bg-2);
+  border-radius: var(--r-md);
   display: grid;
   place-items: center;
-  font-size: 27px;
-  margin-bottom: 18px;
-  color: #fff;
+  color: var(--brand);
+  margin-bottom: 22px;
+}
+.prod-visual svg {
+  width: 44px;
+  height: 44px;
 }
 .prod-card h3 {
-  font-size: 20px;
+  font-size: 18px;
+  font-weight: 600;
   margin: 0 0 8px;
+  color: var(--ink);
 }
 .prod-card .desc {
-  color: var(--text-secondary);
+  color: var(--ink-3);
   font-size: 14px;
-  min-height: 66px;
-  line-height: 1.6;
-}
-.prod-card .from {
-  margin-top: 16px;
-  padding-top: 14px;
-  border-top: 1px dashed var(--border);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.prod-card .from small {
-  color: var(--text-secondary);
+  line-height: 1.7;
+  margin: 0 0 18px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 .prod-card .go {
-  color: var(--accent);
-  font-weight: 700;
-  font-size: 13px;
+  color: var(--brand);
+  font-weight: 600;
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.prod-card .go .go-arrow {
+  font-style: normal;
+  transition: transform 0.22s;
+}
+.prod-card:hover .go-arrow {
+  transform: translateX(4px);
 }
 
-/* ===== 为什么选 ===== */
+/* ===== 为什么选择（深色收口） ===== */
 .why {
-  background: linear-gradient(160deg, #0b1535, #142a5c);
+  background: var(--bg-dark);
+  border-radius: var(--r-xl);
+  padding: 64px;
   color: #fff;
-  border-radius: var(--radius-lg);
-  padding: 48px;
 }
-.why-head {
-  font-size: 22px;
-  font-weight: 800;
+.why-head h2 {
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.4;
+  margin: 0 0 40px;
   max-width: 420px;
-  margin-bottom: 8px;
 }
 .why-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 28px;
-  margin-top: 28px;
+  gap: 40px;
+}
+.why-it .w-ic {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--r-md);
+  background: rgba(65, 95, 255, 0.18);
+  border: 1px solid rgba(65, 95, 255, 0.4);
+  display: grid;
+  place-items: center;
+  color: #8fb0ff;
+  margin-bottom: 14px;
+}
+.why-it .w-ic svg {
+  width: 22px;
+  height: 22px;
 }
 .why-it h4 {
   font-size: 17px;
-  margin: 12px 0 8px;
+  font-weight: 600;
+  margin: 0 0 8px;
+  color: #fff;
 }
 .why-it p {
-  color: #b9cbee;
+  color: rgba(255, 255, 255, 0.58);
   font-size: 14px;
-  line-height: 1.6;
-}
-.why-it .w-ic {
-  width: 48px;
-  height: 48px;
-  border-radius: 13px;
-  background: rgba(0, 212, 255, 0.15);
-  display: grid;
-  place-items: center;
-  font-size: 23px;
+  line-height: 1.7;
+  margin: 0;
 }
 
 /* ===== CTA ===== */
-.cta-block {
-  padding-bottom: 12px;
+.cta-section {
+  padding-bottom: var(--sec-pad);
 }
-.cta-band {
-  background: var(--accent-gradient);
-  border-radius: var(--radius-lg);
-  padding: 44px;
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  flex-wrap: wrap;
+.cta {
+  text-align: center;
+  padding: 64px 24px;
+  background: var(--bg-2);
+  border-radius: var(--r-xl);
 }
-.cta-band h3 {
-  font-size: 24px;
-  margin: 0;
+.cta h3 {
+  font-size: 26px;
+  font-weight: 600;
+  margin: 0 0 10px;
+  color: var(--ink);
 }
-.cta-band p {
-  opacity: 0.9;
-  margin: 6px 0 0;
-}
-.cta-btn {
-  background: #fff;
-  color: var(--accent);
-  border: 0;
-  cursor: pointer;
-  font-weight: 700;
-  padding: 13px 30px;
-  font-size: 16px;
-  border-radius: 10px;
-  transition: 0.2s;
-  font-family: inherit;
-}
-.cta-btn:hover {
-  transform: translateY(-2px);
+.cta p {
+  color: var(--ink-3);
+  font-size: 15px;
+  margin: 0 0 26px;
 }
 
 /* ===== 响应式 ===== */
-@media (max-width: 768px) {
-  .hero {
-    padding: 40px 24px 56px;
-  }
+@media (max-width: 1000px) {
   .hero-grid {
     grid-template-columns: 1fr;
-    gap: 28px;
-  }
-  .hero h1 {
-    font-size: 30px;
+    gap: 32px;
   }
   .prod-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .why-grid {
     grid-template-columns: 1fr;
+    gap: 28px;
   }
   .stats-card {
     grid-template-columns: repeat(2, 1fr);
@@ -508,20 +556,32 @@ export default {
   .stat:nth-child(2) {
     border-right: 0;
   }
-  .stat {
-    padding: 18px 12px;
+}
+@media (max-width: 560px) {
+  .hero {
+    padding: 64px 16px 96px;
+  }
+  .hero h1 {
+    font-size: 32px;
+  }
+  .hero-cta {
+    flex-direction: column;
+  }
+  .prod-grid {
+    grid-template-columns: 1fr;
   }
   .why {
     padding: 32px 24px;
   }
-  .why-grid {
+  .stats-card {
     grid-template-columns: 1fr;
   }
-  .sec-head h2 {
-    font-size: 24px;
+  .stat {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
   }
-  .cta-band {
-    padding: 32px 24px;
+  .stat:last-child {
+    border-bottom: 0;
   }
 }
 </style>

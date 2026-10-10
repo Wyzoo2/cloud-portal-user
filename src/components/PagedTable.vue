@@ -87,27 +87,27 @@ export default {
 .mobile-list {
   display: flex;
   flex-direction: column;
-  gap: var(--space-sm);
+  gap: var(--s-2);
 }
 .mobile-card {
-  padding: var(--space);
-  background: var(--bg-card);
-  border: 1px solid var(--divider);
-  border-radius: var(--radius);
+  padding: var(--s-3);
+  background: var(--bg-0);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
   cursor: pointer;
 }
 .m-row {
   display: flex;
   justify-content: space-between;
-  padding: var(--space-xs) 0;
+  padding: var(--s-1) 0;
   font-size: var(--font-sm);
 }
 .m-label {
-  color: var(--text-secondary);
+  color: var(--ink-3);
   flex-shrink: 0;
 }
 .m-value {
-  color: var(--text-primary);
+  color: var(--ink);
   text-align: right;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -116,9 +116,9 @@ export default {
 .pager {
   display: flex;
   justify-content: flex-end;
-  margin-top: var(--space-md);
+  margin-top: var(--s-4);
 }
-@media (max-width: 768px) {
+@media (max-width: 760px) {
   .pager {
     justify-content: center;
   }
