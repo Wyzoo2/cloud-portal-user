@@ -19,9 +19,14 @@
       </button>
     </div>
 
-    <!-- 有数据 / 加载中：用板块 A 的分页表格（PC 表格 / 移动卡片自动切换 + 分页） -->
+    <!-- 出错 -->
+    <EmptyState v-if="error" :description="errMsg">
+      <el-button type="primary" @click="load">重新加载</el-button>
+    </EmptyState>
+
+    <!-- 加载中 / 有数据 / 正在筛选：交给板块 A 的分页表格（PC 表格 / 移动卡片自动切换 + 分页） -->
     <PagedTable
-      v-if="loading || allRows.length"
+      v-else-if="loading || total > 0 || status !== ''"
       :columns="columns"
       :rows="rows"
       :loading="loading"
@@ -62,12 +67,7 @@
       </template>
     </PagedTable>
 
-    <!-- 出错 -->
-    <EmptyState v-else-if="error" :description="errMsg">
-      <el-button type="primary" @click="load">重新加载</el-button>
-    </EmptyState>
-
-    <!-- 空态：引导去逛商品 -->
+    <!-- 真的一条订单都没有（且没在筛选）：引导去逛商品 -->
     <EmptyState v-else description="还没有订单，去挑一个吧">
       <el-button type="primary" @click="$router.push('/products')">去逛商品</el-button>
     </EmptyState>
@@ -106,10 +106,10 @@ export default {
   components: { PagedTable, StatusTag, AmountText, EmptyState },
   data() {
     return {
-      // 后端 GET /shop/orders 目前不支持 status 筛选参数（实测传 status=999 仍返回全部），
-      // 所以这里一次拉满（size 上限 100），状态筛选和分页都在本地做。
-      // 等后端加上 status 参数后，可把 allRows 换回 rows 并在 load() 里传 status。
-      allRows: [],
+      // 后端已支持 status 筛选参数（2026-10-10 加入，Swagger 可查），
+      // 所以筛选和分页都走服务端、只拉当前页，不再受 size 上限（100）的影响。
+      rows: [],
+      total: 0,
       page: 1,
       size: 20,
       status: '', // '' = 全部
@@ -133,20 +133,6 @@ export default {
       ]
     }
   },
-  computed: {
-    // 本地按状态筛选（后端不支持 status 参数，见 data 里的说明）
-    filtered() {
-      return this.status === '' ? this.allRows : this.allRows.filter(r => r.status === this.status)
-    },
-    total() {
-      return this.filtered.length
-    },
-    // 本地分页
-    rows() {
-      const start = (this.page - 1) * this.size
-      return this.filtered.slice(start, start + this.size)
-    }
-  },
   created() {
     this.load()
   },
@@ -156,13 +142,16 @@ export default {
       this.loading = true
       this.error = false
       try {
-        // 一次拉满（后端 size 上限 100），筛选和分页在本地做 —— 原因见 data 里的注释。
-        // 后端支持 status 之后改成：api.getOrders({ page, size, status })，并去掉 computed 的本地逻辑。
-        const data = await api.getOrders({ page: 1, size: 100 })
-        this.allRows = ((data && data.list) || []).map(normalizeRow)
+        // 服务端筛选 + 服务端分页（后端已支持 status 参数）
+        const params = { page: this.page, size: this.size }
+        if (this.status !== '') params.status = this.status
+        const data = await api.getOrders(params)
+        this.rows = ((data && data.list) || []).map(normalizeRow)
+        this.total = (data && data.total) || 0
       } catch (e) {
         this.error = true
-        this.allRows = []
+        this.rows = []
+        this.total = 0
         this.errMsg = this.readableError(e)
       } finally {
         this.loading = false
@@ -171,14 +160,17 @@ export default {
     switchTab(value) {
       if (this.status === value) return
       this.status = value
-      this.page = 1 // 本地筛选，不用重新请求
+      this.page = 1
+      this.load()
     },
     onPageChange(p) {
-      this.page = p // 本地分页，不用重新请求
+      this.page = p
+      this.load()
     },
     onSizeChange(s) {
       this.size = s
       this.page = 1
+      this.load()
     },
     onRowClick(row) {
       this.$router.push({ name: 'order-detail', params: { id: row.order_id } })

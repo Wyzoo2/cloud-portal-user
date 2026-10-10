@@ -237,10 +237,14 @@ export const mock = {
   getOrders(params = {}) {
     const page = Number(params.page) || 1
     const size = Number(params.size) || 20
-    // 注意：真后端的 GET /shop/orders 【只支持 page / size】，会忽略 status
-    //（实测传 status=999 仍返回全部）。这里保持同样行为，避免出现
-    //「mock 里筛选能用、连真后端就失效」的错觉。页面侧因此改成在本地筛选，见 OrdersView.vue。
+    // 与真后端保持一致：status 为可选筛选（0 待支付 / 1 部分成功 / 2 全部成功 / 3 全部失败），
+    // 非法值返回 1001（真后端实测：status=999 → code=1001）
+    const status = params.status != null && params.status !== '' ? Number(params.status) : null
+    if (status !== null && ![0, 1, 2, 3].includes(status)) {
+      return bizError(1001, '参数校验失败', { errors: ['status must be one of: 0, 1, 2, 3'] })
+    }
     let list = state.orders
+    if (status !== null) list = list.filter(o => o.status === status)
     const total = list.length
     const start = (page - 1) * size
     const rows = list.slice(start, start + size).map(o => ({
