@@ -94,20 +94,10 @@ export const mock = {
     return delay({ ok: true }, 150)
   },
 
-  /* ── 商城（C 板块待做，先给示例数据保链路） ── */
-
-  getProducts() {
-    return delay({ list: [] })
-  },
-  createOrder() {
-    return delay({ order_id: 'mock-order', order_no: 'O-mock', total_cents: 0, status: 0, items: [] })
-  },
-  getOrder() {
-    return delay({ order_id: 'mock-order', order_no: 'O-mock', total_cents: 0, status: 0, items: [] })
-  },
-  payOrder() {
-    return delay({ order_id: 'mock-order', status: 0 })
-  },
+  /* ── 商城：C 板块页面已实现，此处不再放桩 ──
+     删掉 getProducts / createOrder / getOrder / payOrder 后，
+     src/api/index.js 的 $() 检测到 mockFn 为 undefined，会自动回落到真实 HTTP
+     （经 vite 代理到本地 mock 服务或真后端）。认证与钱包仍走本文件。 */
 
   /* ── 钱包 ── */
 
