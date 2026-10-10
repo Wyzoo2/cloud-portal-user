@@ -1,11 +1,14 @@
 /**
- * mock 数据层（后端未就绪时的开发假数据）
- * - 字段严格对齐《用户端前端开发文档》§4 接口手册
- * - 联调时把 USE_MOCK 改为 false，即切回真实接口（src/api/index.js 已接入）
+ * mock 数据层（后端不可用时的开发假数据）
+ * - 字段严格对齐《用户端前端开发文档》§4 接口手册，并与真后端实测行为保持一致
+ * - **默认走真后端**；本层只在显式开启时生效（见下方 USE_MOCK）
  * - 金额单位一律「分」；id 一律字符串
  */
 
-export const USE_MOCK = true
+// 默认走【真后端】（cloud-portal 后端已就绪，地址见 vite.config.js 的 API_TARGET）。
+// 后端不可用 / 断网 / 想演示边界状态（售罄、后付费、处理中…）时，用环境变量切回本层假数据：
+//   npm run dev:mock        ← 等价于 VITE_USE_MOCK=true
+export const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true'
 
 /** 模拟网络延迟 */
 function delay(data, ms = 280) {
