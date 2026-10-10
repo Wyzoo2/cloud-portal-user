@@ -15,6 +15,7 @@ import WalletView from '../views/WalletView.vue'
 import TransactionsView from '../views/TransactionsView.vue'
 import RechargeView from '../views/RechargeView.vue'
 import RechargesView from '../views/RechargesView.vue'
+import ProfileView from '../views/ProfileView.vue'
 import PlaceholderView from '../views/PlaceholderView.vue'
 
 export const router = createRouter({
@@ -36,7 +37,7 @@ export const router = createRouter({
         { path: 'wallet/transactions', name: 'transactions', component: TransactionsView },
         { path: 'wallet/recharge', name: 'recharge', component: RechargeView },
         { path: 'wallet/recharges', name: 'recharges', component: RechargesView },
-        { path: 'profile', name: 'profile', component: PlaceholderView, meta: { title: '我的' } }
+        { path: 'profile', name: 'profile', component: ProfileView }
       ]
     },
     { path: '/:pathMatch(.*)*', redirect: '/' }

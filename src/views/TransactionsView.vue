@@ -1,6 +1,6 @@
 <template>
   <div class="transactions">
-    <div class="page-head">
+    <div class="page-head" v-reveal>
       <h2>消费流水</h2>
       <el-radio-group v-model="type" @change="onFilter">
         <el-radio-button :value="''">全部</el-radio-button>
@@ -11,11 +11,11 @@
       </el-radio-group>
     </div>
 
-    <PagedTable :columns="columns" :rows="rows" :loading="loading" :total="total"
+    <PagedTable v-reveal="{ delay: 100 }" :columns="columns" :rows="rows" :loading="loading" :total="total"
       :page="page" :size="size" empty-text="暂无流水"
       @page-change="onPage" @size-change="onSize">
       <template #cell-type="{ row }">
-        <el-tag :type="typeTag(row.type)" size="small" effect="light">{{ typeText(row.type) }}</el-tag>
+        <span class="type-pill" :class="typeClass(row.type)">{{ typeText(row.type) }}</span>
       </template>
       <template #cell-amount_cents="{ row }">
         <span :class="amtClass(row.type)">
@@ -66,7 +66,10 @@ export default {
     async load() {
       this.loading = true
       try {
-        const data = await api.getTransactions({ page: this.page, size: this.size, type: this.type })
+        // 「全部」时不传 type，避免后端把空值当成某个具体类型
+        const params = { page: this.page, size: this.size }
+        if (this.type !== '') params.type = this.type
+        const data = await api.getTransactions(params)
         this.rows = data.list
         this.total = data.total
       } catch (e) {
@@ -79,8 +82,8 @@ export default {
     typeText(t) {
       return (TRANSACTION_TYPE[t] && TRANSACTION_TYPE[t].text) || '-'
     },
-    typeTag(t) {
-      return { 1: 'success', 2: 'danger', 3: 'success', 4: 'info' }[t] || 'info'
+    typeClass(t) {
+      return { 1: 'st-success', 2: 'st-danger', 3: 'st-success', 4: 'st-neutral' }[t] || 'st-neutral'
     },
     signOf(t) {
       return (TRANSACTION_TYPE[t] && TRANSACTION_TYPE[t].sign) || ''
@@ -120,25 +123,40 @@ export default {
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: var(--space);
-  margin-bottom: var(--space-md);
+  gap: var(--s-3);
+  margin-bottom: var(--s-4);
 }
 .page-head h2 {
-  font-size: var(--font-lg);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
   margin: 0;
+  color: var(--ink);
 }
+.type-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 11px;
+  border-radius: var(--r-pill);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.6;
+}
+.st-success { color: var(--success); background: var(--success-bg); }
+.st-danger { color: var(--danger); background: var(--danger-bg); }
+.st-neutral { color: var(--ink-3); background: var(--bg-2); }
 .amt-in {
   color: var(--success);
   font-weight: 600;
 }
 .amt-out {
-  color: var(--error);
+  color: var(--danger);
   font-weight: 600;
 }
 .amt-adj {
-  color: var(--info);
+  color: var(--ink-3);
 }
-@media (max-width: 768px) {
+@media (max-width: 1000px) {
   .page-head {
     flex-direction: column;
     align-items: flex-start;

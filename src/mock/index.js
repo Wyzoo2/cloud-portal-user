@@ -5,7 +5,7 @@
  * - 金额单位一律「分」；id 一律字符串
  */
 
-export const USE_MOCK = true
+export const USE_MOCK = false
 
 /** 模拟网络延迟 */
 function delay(data, ms = 280) {
@@ -173,11 +173,17 @@ export const mock = {
     return delay({ ok: true }, 150)
   },
 
-  /* ── 商城（C 板块：getProducts / createOrder / getOrders）──
-     本文件只实现 C 板块用得上的这 3 个接口。
-     getOrder（订单详情）/ payOrder（支付）属于 D 板块，这里不提供 ——
-     src/api/index.js 的 $() 检测到 mockFn 为 undefined 时会自动回落到真实 HTTP，
-     由 D 组自行决定是走 HTTP 还是补数据。 */
+  changePassword(old_password, new_password) {
+    // 演示账号 demo 当前密码 demo1234
+    if (old_password !== 'demo1234') return bizError(2003, '当前密码错误')
+    if (!/^(?=.*[A-Za-z])(?=.*\d)[\s\S]{8,64}$/.test(new_password)) {
+      return bizError(1001, '新密码需 8-64 位且同时包含字母和数字', { errors: ['新密码需 8-64 位且同时包含字母和数字'] })
+    }
+    if (old_password === new_password) return bizError(1001, '新旧密码不能相同', { errors: ['新旧密码不能相同'] })
+    return delay({ ok: true }, 200)
+  },
+
+  /* ── 商城（C 板块待做，先给示例数据保链路） ── */
 
   // GET /shop/products
   getProducts(params = {}) {

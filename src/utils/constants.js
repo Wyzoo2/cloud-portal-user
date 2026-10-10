@@ -5,6 +5,7 @@
 
 /* ── 导航菜单（布局壳与首页共用） ── */
 export const APP_MENU = [
+  { path: '/', label: '首页' },
   { path: '/products', label: '商品' },
   { path: '/orders', label: '订单' },
   { path: '/wallet', label: '钱包' },
