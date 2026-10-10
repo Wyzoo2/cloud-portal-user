@@ -21,6 +21,79 @@ function bizError(code, message, data = null) {
 
 const STORE_KEY = 'portal_mock_state'
 
+/* ── 商品目录（C 板块 · C1 商品列表用）────────────────────────────
+   字段对齐《API 契约》§2.1 / 《前端开发文档》§4.2。
+   故意覆盖 C1 的全部显示分支：
+     storage-1t        stock === null      → 显示「现货」
+     storage-metered   billing_mode === 2  → 显示「后付费」
+     desktop-basic     stock === 0         → 显示「已售罄」且按钮禁用
+   注意：契约里商品结构【没有图片字段】，所以卡片只用文字/图标，不放图。 */
+const PRODUCTS = [
+  { product_code: 'storage', sku_id: 'storage-500g', name: '云存储·500G',
+    spec: { quota_gb: 500, region: '华东1' }, price_cents: 3000,
+    billing_mode: 1, period_days: 30, stock: 43, synced_at: '2026-10-09T03:00:00Z' },
+  { product_code: 'storage', sku_id: 'storage-1t', name: '云存储·1T',
+    spec: { quota_gb: 1024, region: '华东1', transfer: '不限量' }, price_cents: 5500,
+    billing_mode: 1, period_days: 30, stock: null, synced_at: '2026-10-09T03:00:00Z' },
+  { product_code: 'storage', sku_id: 'storage-metered', name: '云存储·按量计费',
+    spec: { quota_gb: 100, note: '用多少扣多少' }, price_cents: 0,
+    billing_mode: 2, stock: null, synced_at: '2026-10-09T03:00:00Z' },
+  { product_code: 'phone', sku_id: 'phone-standard', name: '云手机·标准版',
+    spec: { vcpu: 2, ram_gb: 2, storage_gb: 16, ip: '独立IP' }, price_cents: 3000,
+    billing_mode: 1, period_days: 30, stock: 43, synced_at: '2026-10-09T03:00:00Z' },
+  { product_code: 'desktop', sku_id: 'desktop-basic', name: '云电脑·办公型',
+    spec: { vcpu: 4, ram_gb: 8, disk_gb: 80, os: 'Windows' }, price_cents: 16900,
+    billing_mode: 1, period_days: 30, stock: 0, synced_at: '2026-10-09T03:00:00Z' }
+]
+
+/** 造一个订单项（id 一律字符串） */
+function mkItem(item_id, product_code, sku_id, quantity, price_cents, status, extra = {}) {
+  return { item_id, product_code, sku_id, quantity, price_cents, status,
+    instance_id: null, expire_at: null, fail_reason: null, ...extra }
+}
+
+/* ── 订单（C 板块 · C3 订单列表用）──────────────────────────────
+   预置 6 笔，覆盖订单 4 种状态 + 订单项 5 种状态：
+     9001 部分成功（一项开通成功 + 一项已退款）
+     9002 全部失败（失败待退款）
+     9003 待支付
+     9004 全部成功
+     9005 天价待支付（给 D 组测 3001 余额不足用）
+     9006 处理中样板（item.status 停在 1，用来调「处理中」UI） */
+function defaultOrders() {
+  return [
+    { order_id: '9001', order_no: 'O20261001-000901', total_cents: 6000, status: 1,
+      created_at: '2026-10-01T02:00:00Z', paid_at: '2026-10-01T02:01:00Z', items: [
+        mkItem('31', 'phone', 'phone-standard', 2, 6000, 2,
+          { instance_id: 'ph-0001', expire_at: '2026-10-31T02:01:00Z' }),
+        mkItem('32', 'storage', 'storage-1t', 1, 5500, 4, { fail_reason: 'OUT_OF_STOCK' })
+      ] },
+    { order_id: '9002', order_no: 'O20261002-000902', total_cents: 3000, status: 3,
+      created_at: '2026-10-02T02:00:00Z', paid_at: '2026-10-02T02:01:00Z', items: [
+        mkItem('33', 'storage', 'storage-500g', 1, 3000, 3, { fail_reason: 'PROVISION_TIMEOUT' })
+      ] },
+    { order_id: '9003', order_no: 'O20261003-000903', total_cents: 3000, status: 0,
+      created_at: '2026-10-03T02:00:00Z', paid_at: null, items: [
+        mkItem('34', 'storage', 'storage-500g', 1, 3000, 0)
+      ] },
+    { order_id: '9004', order_no: 'O20261004-000904', total_cents: 8500, status: 2,
+      created_at: '2026-10-04T02:00:00Z', paid_at: '2026-10-04T02:01:00Z', items: [
+        mkItem('35', 'phone', 'phone-standard', 1, 3000, 2,
+          { instance_id: 'ph-0002', expire_at: '2026-11-03T02:01:00Z' }),
+        mkItem('36', 'storage', 'storage-1t', 1, 5500, 2,
+          { instance_id: 'storage-0007', expire_at: '2026-11-03T02:01:00Z' })
+      ] },
+    { order_id: '9005', order_no: 'O20261005-000905', total_cents: 9999900, status: 0,
+      created_at: '2026-10-05T02:00:00Z', paid_at: null, items: [
+        mkItem('37', 'desktop', 'desktop-basic', 10, 9999900, 0)
+      ] },
+    { order_id: '9006', order_no: 'O20261006-000906', total_cents: 3000, status: 1,
+      created_at: '2026-10-06T02:00:00Z', paid_at: '2026-10-06T02:01:00Z', items: [
+        mkItem('38', 'storage', 'storage-500g', 1, 3000, 1)
+      ] }
+  ]
+}
+
 function defaultState() {
   return {
     user: { id: '018f0000-0000-4000-8000-000000000001', username: 'demo' },
@@ -41,7 +114,9 @@ function defaultState() {
       { apply_id: '302', amount_cents: 10000, status: 0, balance_after: null, reject_reason: null, created_at: '2026-10-08T06:00:00Z' },
       { apply_id: '301', amount_cents: 50000, status: 1, balance_after: 50000, reject_reason: null, created_at: '2026-10-01T01:00:00Z' }
     ],
-    seq: 304
+    seq: 304,          // 充值申请号自增
+    orderSeq: 9007,    // 订单一侧自增（订单号 / 订单项号），避开预置的 9001~9006 与 31~38
+    orders: defaultOrders()
   }
 }
 
@@ -57,6 +132,10 @@ function loadState() {
 }
 
 const state = loadState()
+
+// 兼容旧版 localStorage：老数据没有 orders / orderSeq 字段，缺了就补，避免升级后报错
+if (!Array.isArray(state.orders)) state.orders = defaultOrders()
+if (typeof state.orderSeq !== 'number') state.orderSeq = 9007
 
 function saveState() {
   try {
@@ -94,10 +173,91 @@ export const mock = {
     return delay({ ok: true }, 150)
   },
 
-  /* ── 商城：C 板块页面已实现，此处不再放桩 ──
-     删掉 getProducts / createOrder / getOrder / payOrder 后，
-     src/api/index.js 的 $() 检测到 mockFn 为 undefined，会自动回落到真实 HTTP
-     （经 vite 代理到本地 mock 服务或真后端）。认证与钱包仍走本文件。 */
+  /* ── 商城（C 板块：getProducts / createOrder / getOrders）──
+     本文件只实现 C 板块用得上的这 3 个接口。
+     getOrder（订单详情）/ payOrder（支付）属于 D 板块，这里不提供 ——
+     src/api/index.js 的 $() 检测到 mockFn 为 undefined 时会自动回落到真实 HTTP，
+     由 D 组自行决定是走 HTTP 还是补数据。 */
+
+  // GET /shop/products
+  getProducts(params = {}) {
+    const pc = params.product_code
+    const list = (pc ? PRODUCTS.filter(p => p.product_code === pc) : PRODUCTS)
+      .map(p => ({ ...p, spec: { ...p.spec } }))
+    return delay({ list })
+  },
+
+  // POST /shop/orders —— ★ 入参不带价格，「后端」按当前目录重算
+  createOrder(items) {
+    const arr = Array.isArray(items) ? items : []
+    if (arr.length < 1 || arr.length > 10) {
+      return bizError(1001, '参数校验失败', { errors: ['一单只能购买 1~10 项'] })
+    }
+    const built = []
+    let total = 0
+    for (const it of arr) {
+      const qty = Number(it.quantity || 1)
+      const p = PRODUCTS.find(x => x.product_code === it.product_code && x.sku_id === it.sku_id)
+      if (!p) return bizError(4003, '商品不存在或已下架')
+      if (qty < 1 || qty > 10) {
+        return bizError(1001, '参数校验失败', { errors: [`${p.name} 的数量需在 1~10 之间`] })
+      }
+      if (p.product_code === 'phone' && qty > 3) {
+        return bizError(1001, '参数校验失败', { errors: ['云手机单项最多购买 3 台'] })
+      }
+      if (p.stock === 0) return bizError(4004, '库存不足')
+      total += p.price_cents * qty
+      built.push(mkItem(String(state.orderSeq++), p.product_code, p.sku_id, qty,
+        p.price_cents * qty, 0))
+    }
+    const now = new Date()
+    const order = {
+      order_id: String(state.orderSeq++),
+      order_no: 'O' + now.toISOString().slice(0, 10).replace(/-/g, '') + '-' + String(state.orderSeq),
+      total_cents: total,
+      status: 0,
+      created_at: now.toISOString(),
+      paid_at: null,
+      items: built
+    }
+    state.orders.unshift(order)
+    saveState()
+    return delay({
+      order_id: order.order_id,
+      order_no: order.order_no,
+      total_cents: total,
+      status: order.status,
+      items: order.items
+    })
+  },
+
+  /* GET /shop/orders —— ⚠️ 契约里没有定义这个接口，下面的字段形状是按 C3 页面
+     需要【假设】的，以后端真实样例为准。页面侧字段适配收敛在
+     OrdersView.vue 的 normalizeRow() 里，接口变了只改那一处。 */
+  getOrders(params = {}) {
+    const page = Number(params.page) || 1
+    const size = Number(params.size) || 20
+    const status = params.status != null && params.status !== '' ? Number(params.status) : null
+    let list = state.orders
+    if (status != null) list = list.filter(o => o.status === status)
+    const total = list.length
+    const start = (page - 1) * size
+    const rows = list.slice(start, start + size).map(o => ({
+      order_id: o.order_id,
+      order_no: o.order_no,
+      total_cents: o.total_cents,
+      status: o.status,
+      created_at: o.created_at,
+      paid_at: o.paid_at,
+      item_count: o.items.length,
+      product_codes: [...new Set(o.items.map(i => i.product_code))],
+      summary: o.items.map(i => {
+        const p = PRODUCTS.find(x => x.sku_id === i.sku_id)
+        return `${p ? p.name : i.sku_id} ×${i.quantity}`
+      }).join('，')
+    }))
+    return delay({ list: rows, total, page, size })
+  },
 
   /* ── 钱包 ── */
 
