@@ -264,4 +264,15 @@ export default {
   color: var(--text-secondary);
   white-space: nowrap;
 }
+
+/* ── 移动端 ── */
+@media (max-width: 768px) {
+  /* 触控目标 ≥ 44px：筛选按钮太小手指点不准 */
+  .tab {
+    min-height: 44px;
+    padding: 10px 18px;
+    display: inline-flex;
+    align-items: center;
+  }
+}
 </style>

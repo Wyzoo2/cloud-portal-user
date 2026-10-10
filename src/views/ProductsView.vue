@@ -434,6 +434,7 @@ export default {
 .price {
   display: flex;
   align-items: baseline;
+  flex-wrap: wrap; /* 窄卡片放不下时整体换行，而不是把文字挤断 */
   gap: 6px;
   margin-bottom: var(--space);
   min-height: 30px;
@@ -446,6 +447,7 @@ export default {
   font-size: var(--font-lg);
   font-weight: 600;
   color: var(--accent);
+  white-space: nowrap; /* 后付费三个字不许拆行 */
 }
 .buy {
   width: 100%;
@@ -499,6 +501,12 @@ export default {
   /* 触控目标 ≥ 44px */
   .buy {
     height: 44px;
+  }
+  .tab {
+    min-height: 44px;
+    padding: 10px 18px;
+    display: inline-flex;
+    align-items: center;
   }
 }
 </style>
