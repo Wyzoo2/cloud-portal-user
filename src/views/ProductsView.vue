@@ -314,14 +314,14 @@ export default {
 
 <style scoped>
 .page-head {
-  margin-bottom: var(--space-md);
+  margin-bottom: var(--s-4);
 }
 .page-head h2 {
   font-size: var(--font-xl);
-  margin-bottom: var(--space-xs);
+  margin-bottom: var(--s-1);
 }
 .sub {
-  color: var(--text-secondary);
+  color: var(--ink-3);
   font-size: var(--font-sm);
 }
 
@@ -329,26 +329,27 @@ export default {
 .tabs {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-sm);
-  margin-bottom: var(--space-md);
+  gap: var(--s-2);
+  margin-bottom: var(--s-4);
 }
 .tab {
-  padding: 7px 16px;
-  border: 1px solid var(--border);
-  background: var(--bg-card);
-  border-radius: var(--radius);
-  font-size: var(--font-sm);
-  color: var(--text-secondary);
+  padding: 8px 18px;
+  border: 1px solid var(--line);
+  background: var(--bg-0);
+  border-radius: var(--r-pill);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink-3);
   cursor: pointer;
   transition: all 0.2s;
 }
 .tab:hover {
-  border-color: var(--accent);
-  color: var(--accent);
+  border-color: var(--brand);
+  color: var(--brand);
 }
 .tab.active {
-  background: var(--accent);
-  border-color: var(--accent);
+  background: var(--brand);
+  border-color: var(--brand);
   color: #fff;
 }
 
@@ -356,19 +357,19 @@ export default {
 .grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-md);
+  gap: var(--s-4);
 }
 .card {
   display: flex;
   flex-direction: column;
-  padding: var(--space-md);
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  padding: var(--s-4);
+  background: var(--bg-0);
+  border: 1px solid var(--line);
+  border-radius: var(--r-xl);
   transition: box-shadow 0.2s, transform 0.2s;
 }
 .card:hover {
-  box-shadow: var(--shadow);
+  box-shadow: var(--sh-2);
   transform: translateY(-2px);
 }
 .card.soldout {
@@ -378,13 +379,13 @@ export default {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: var(--space-sm);
+  margin-bottom: var(--s-2);
 }
 .line {
   font-size: var(--font-xs);
-  color: var(--accent);
-  border: 1px solid var(--accent);
-  border-radius: var(--radius-sm);
+  color: var(--brand);
+  border: 1px solid var(--brand);
+  border-radius: var(--r-sm);
   padding: 1px 7px;
   white-space: nowrap;
 }
@@ -400,30 +401,30 @@ export default {
 }
 .name {
   font-size: var(--font-md);
-  margin-bottom: var(--space-sm);
+  margin-bottom: var(--s-2);
 }
 
 /* 规格 */
 .spec {
   flex: 1;
-  padding: var(--space-sm) 0;
-  border-top: 1px dashed var(--divider);
-  border-bottom: 1px dashed var(--divider);
-  margin-bottom: var(--space-sm);
+  padding: var(--s-2) 0;
+  border-top: 1px dashed var(--line);
+  border-bottom: 1px dashed var(--line);
+  margin-bottom: var(--s-2);
 }
 .spec-row {
   display: flex;
   justify-content: space-between;
-  gap: var(--space-sm);
+  gap: var(--s-2);
   font-size: var(--font-sm);
   padding: 2px 0;
 }
 .spec-k {
-  color: var(--text-secondary);
+  color: var(--ink-3);
   flex-shrink: 0;
 }
 .spec-v {
-  color: var(--text-primary);
+  color: var(--ink);
   text-align: right;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -436,17 +437,17 @@ export default {
   align-items: baseline;
   flex-wrap: wrap; /* 窄卡片放不下时整体换行，而不是把文字挤断 */
   gap: 6px;
-  margin-bottom: var(--space);
+  margin-bottom: var(--s-3);
   min-height: 30px;
 }
 .price .unit {
   font-size: var(--font-xs);
-  color: var(--text-secondary);
+  color: var(--ink-3);
 }
 .metered {
   font-size: var(--font-lg);
   font-weight: 600;
-  color: var(--accent);
+  color: var(--brand);
   white-space: nowrap; /* 后付费三个字不许拆行 */
 }
 .buy {
@@ -458,42 +459,42 @@ export default {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-md);
-  padding: var(--space-sm) 0;
+  gap: var(--s-4);
+  padding: var(--s-2) 0;
   font-size: var(--font-base);
 }
 .dlg-row + .dlg-row {
-  border-top: 1px dashed var(--divider);
+  border-top: 1px dashed var(--line);
 }
 .dlg-row.total {
-  padding-top: var(--space);
+  padding-top: var(--s-3);
 }
 .dlg-k {
-  color: var(--text-secondary);
+  color: var(--ink-3);
   flex-shrink: 0;
 }
 .dlg-v {
-  color: var(--text-primary);
+  color: var(--ink);
   text-align: right;
 }
 .dlg-tip {
-  margin-top: var(--space);
+  margin-top: var(--s-3);
   font-size: var(--font-xs);
-  color: var(--text-secondary);
+  color: var(--ink-3);
   line-height: 1.6;
 }
 .dlg-tip.warn {
   color: var(--warning);
-  margin-top: var(--space-sm);
+  margin-top: var(--s-2);
 }
 
-@media (max-width: 768px) {
+@media (max-width: 760px) {
   .grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: var(--space-sm);
+    gap: var(--s-2);
   }
   .card {
-    padding: var(--space);
+    padding: var(--s-3);
   }
   .name {
     font-size: var(--font-base);
