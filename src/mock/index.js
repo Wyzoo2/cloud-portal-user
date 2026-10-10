@@ -237,9 +237,10 @@ export const mock = {
   getOrders(params = {}) {
     const page = Number(params.page) || 1
     const size = Number(params.size) || 20
-    const status = params.status != null && params.status !== '' ? Number(params.status) : null
+    // 注意：真后端的 GET /shop/orders 【只支持 page / size】，会忽略 status
+    //（实测传 status=999 仍返回全部）。这里保持同样行为，避免出现
+    //「mock 里筛选能用、连真后端就失效」的错觉。页面侧因此改成在本地筛选，见 OrdersView.vue。
     let list = state.orders
-    if (status != null) list = list.filter(o => o.status === status)
     const total = list.length
     const start = (page - 1) * size
     const rows = list.slice(start, start + size).map(o => ({

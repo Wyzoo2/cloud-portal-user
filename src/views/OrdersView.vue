@@ -21,7 +21,7 @@
 
     <!-- 有数据 / 加载中：用板块 A 的分页表格（PC 表格 / 移动卡片自动切换 + 分页） -->
     <PagedTable
-      v-if="loading || rows.length"
+      v-if="loading || allRows.length"
       :columns="columns"
       :rows="rows"
       :loading="loading"
@@ -29,7 +29,7 @@
       :page="page"
       :size="size"
       row-key="order_id"
-      empty-text="暂无订单"
+      :empty-text="status === '' ? '暂无订单' : '该状态下没有订单'"
       @page-change="onPageChange"
       @size-change="onSizeChange"
       @row-click="onRowClick"
@@ -106,8 +106,10 @@ export default {
   components: { PagedTable, StatusTag, AmountText, EmptyState },
   data() {
     return {
-      rows: [],
-      total: 0,
+      // 后端 GET /shop/orders 目前不支持 status 筛选参数（实测传 status=999 仍返回全部），
+      // 所以这里一次拉满（size 上限 100），状态筛选和分页都在本地做。
+      // 等后端加上 status 参数后，可把 allRows 换回 rows 并在 load() 里传 status。
+      allRows: [],
       page: 1,
       size: 20,
       status: '', // '' = 全部
@@ -131,6 +133,20 @@ export default {
       ]
     }
   },
+  computed: {
+    // 本地按状态筛选（后端不支持 status 参数，见 data 里的说明）
+    filtered() {
+      return this.status === '' ? this.allRows : this.allRows.filter(r => r.status === this.status)
+    },
+    total() {
+      return this.filtered.length
+    },
+    // 本地分页
+    rows() {
+      const start = (this.page - 1) * this.size
+      return this.filtered.slice(start, start + this.size)
+    }
+  },
   created() {
     this.load()
   },
@@ -140,15 +156,13 @@ export default {
       this.loading = true
       this.error = false
       try {
-        const params = { page: this.page, size: this.size }
-        if (this.status !== '') params.status = this.status
-        const data = await api.getOrders(params)
-        this.rows = ((data && data.list) || []).map(normalizeRow)
-        this.total = (data && data.total) || 0
+        // 一次拉满（后端 size 上限 100），筛选和分页在本地做 —— 原因见 data 里的注释。
+        // 后端支持 status 之后改成：api.getOrders({ page, size, status })，并去掉 computed 的本地逻辑。
+        const data = await api.getOrders({ page: 1, size: 100 })
+        this.allRows = ((data && data.list) || []).map(normalizeRow)
       } catch (e) {
         this.error = true
-        this.rows = []
-        this.total = 0
+        this.allRows = []
         this.errMsg = this.readableError(e)
       } finally {
         this.loading = false
@@ -157,17 +171,14 @@ export default {
     switchTab(value) {
       if (this.status === value) return
       this.status = value
-      this.page = 1
-      this.load()
+      this.page = 1 // 本地筛选，不用重新请求
     },
     onPageChange(p) {
-      this.page = p
-      this.load()
+      this.page = p // 本地分页，不用重新请求
     },
     onSizeChange(s) {
       this.size = s
       this.page = 1
-      this.load()
     },
     onRowClick(row) {
       this.$router.push({ name: 'order-detail', params: { id: row.order_id } })
