@@ -190,14 +190,14 @@ export default {
 
 <style scoped>
 .page-head {
-  margin-bottom: var(--space-md);
+  margin-bottom: var(--s-4);
 }
 .page-head h2 {
   font-size: var(--font-xl);
-  margin-bottom: var(--space-xs);
+  margin-bottom: var(--s-1);
 }
 .sub {
-  color: var(--text-secondary);
+  color: var(--ink-3);
   font-size: var(--font-sm);
 }
 
@@ -205,26 +205,27 @@ export default {
 .tabs {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-sm);
-  margin-bottom: var(--space-md);
+  gap: var(--s-2);
+  margin-bottom: var(--s-4);
 }
 .tab {
-  padding: 7px 16px;
-  border: 1px solid var(--border);
-  background: var(--bg-card);
-  border-radius: var(--radius);
-  font-size: var(--font-sm);
-  color: var(--text-secondary);
+  padding: 8px 18px;
+  border: 1px solid var(--line);
+  background: var(--bg-0);
+  border-radius: var(--r-pill);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink-3);
   cursor: pointer;
   transition: all 0.2s;
 }
 .tab:hover {
-  border-color: var(--accent);
-  color: var(--accent);
+  border-color: var(--brand);
+  color: var(--brand);
 }
 .tab.active {
-  background: var(--accent);
-  border-color: var(--accent);
+  background: var(--brand);
+  border-color: var(--brand);
   color: #fff;
 }
 
@@ -241,35 +242,35 @@ export default {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-sm);
-  margin-bottom: var(--space-xs);
+  gap: var(--s-2);
+  margin-bottom: var(--s-1);
 }
 .m-no {
   font-size: var(--font-sm);
-  color: var(--text-secondary);
+  color: var(--ink-3);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .m-sum {
   font-size: var(--font-sm);
-  color: var(--text-primary);
-  margin-bottom: var(--space-xs);
+  color: var(--ink);
+  margin-bottom: var(--s-1);
 }
 .m-bot {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-sm);
+  gap: var(--s-2);
 }
 .m-time {
   font-size: var(--font-xs);
-  color: var(--text-secondary);
+  color: var(--ink-3);
   white-space: nowrap;
 }
 
 /* ── 移动端 ── */
-@media (max-width: 768px) {
+@media (max-width: 760px) {
   /* 触控目标 ≥ 44px：筛选按钮太小手指点不准 */
   .tab {
     min-height: 44px;

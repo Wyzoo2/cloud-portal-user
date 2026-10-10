@@ -2,6 +2,7 @@
   <div class="layout">
     <!-- 顶栏 -->
     <header class="header" :class="{ scrolled }">
+      <!-- 左：Logo -->
       <div class="brand" @click="$router.push('/')">
         <span class="mark">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -15,14 +16,14 @@
         </div>
       </div>
 
-      <!-- PC 导航 -->
+      <!-- 中：PC 导航 -->
       <nav class="nav">
         <router-link v-for="m in menu" :key="m.path" :to="m.path" class="nav-item"
           :class="{ active: isActive(m.path) }">{{ m.label }}</router-link>
       </nav>
 
       <div class="right">
-        <!-- 已登录：余额 + 用户下拉 -->
+        <!-- 桌面端：已登录 → 余额 + 用户下拉 -->
         <template v-if="isLoggedIn">
           <div class="balance" @click="$router.push('/wallet')">
             余额 <AmountText :cents="balanceCents" strong />
@@ -39,11 +40,19 @@
             </template>
           </el-dropdown>
         </template>
-        <!-- 游客：登录 / 注册 -->
+        <!-- 桌面端：游客 → 登录 / 注册 -->
         <template v-else>
           <button class="btn-nav ghost" @click="$router.push('/login')">登录</button>
           <button class="btn-nav primary" @click="$router.push('/register')">注册</button>
         </template>
+
+        <!-- 移动端：汉堡按钮（右上角） -->
+        <button class="menu-btn" @click="menuOpen = true" aria-label="打开菜单">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+            stroke-linecap="round" aria-hidden="true">
+            <path d="M3 6h18" /><path d="M3 12h18" /><path d="M3 18h18" />
+          </svg>
+        </button>
       </div>
     </header>
 
@@ -65,13 +74,57 @@
       </router-view>
     </main>
 
-    <!-- 移动端底部 Tab -->
-    <nav class="tabbar">
-      <router-link v-for="m in menu" :key="m.path" :to="m.path" class="tab-item"
-        :class="{ active: isActive(m.path) }">
-        <span class="tab-label">{{ m.label }}</span>
-      </router-link>
-    </nav>
+    <!-- 移动端：右下角悬浮（余额 + 用户） -->
+    <div v-if="isLoggedIn" class="mobile-dock">
+      <button class="dock-row" @click="$router.push('/wallet')">
+        <span class="dock-label">余额</span>
+        <AmountText :cents="balanceCents" strong />
+      </button>
+      <span class="dock-divider"></span>
+      <button class="dock-row" @click="$router.push('/profile')">
+        <span class="dock-avatar">{{ avatarText }}</span>
+        <span class="dock-name">{{ username }}</span>
+      </button>
+    </div>
+
+    <!-- 移动端：汉堡抽屉 -->
+    <transition name="fade">
+      <div v-if="menuOpen" class="drawer-mask" @click="menuOpen = false"></div>
+    </transition>
+    <transition name="slide">
+      <aside v-if="menuOpen" class="drawer" role="dialog" aria-label="导航菜单">
+        <div class="drawer-head">
+          <span class="drawer-title">导航</span>
+          <button class="drawer-close" @click="menuOpen = false" aria-label="关闭菜单">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+              stroke-linecap="round" aria-hidden="true">
+              <path d="M18 6 6 18" /><path d="m6 6 12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <nav class="drawer-nav">
+          <router-link v-for="m in menu" :key="m.path" :to="m.path" class="drawer-item"
+            :class="{ active: isActive(m.path) }">
+            <span>{{ m.label }}</span>
+            <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="m9 18 6-6-6-6" />
+            </svg>
+          </router-link>
+        </nav>
+
+        <div class="drawer-foot">
+          <template v-if="isLoggedIn">
+            <button class="drawer-btn danger" @click="onCommand('logout')">退出登录</button>
+          </template>
+          <template v-else>
+            <button class="drawer-btn primary" @click="go('/register')">注册</button>
+            <button class="drawer-btn" @click="go('/login')">登录</button>
+          </template>
+        </div>
+      </aside>
+    </transition>
   </div>
 </template>
 
@@ -85,7 +138,7 @@ export default {
   name: 'AppLayout',
   components: { AmountText },
   data() {
-    return { menu: APP_MENU, scrolled: false }
+    return { menu: APP_MENU, scrolled: false, menuOpen: false }
   },
   mounted() {
     window.addEventListener('scroll', this.onScroll, { passive: true })
@@ -93,6 +146,12 @@ export default {
   },
   beforeUnmount() {
     window.removeEventListener('scroll', this.onScroll)
+  },
+  watch: {
+    // 路由变化自动收起抽屉
+    $route() {
+      this.menuOpen = false
+    }
   },
   computed: {
     ...mapState(useUserStore, ['user', 'balance']),
@@ -131,7 +190,12 @@ export default {
       const p = this.$route.path
       return p === path || (path !== '/' && p.startsWith(path + '/'))
     },
+    go(path) {
+      this.menuOpen = false
+      this.$router.push(path)
+    },
     onCommand(cmd) {
+      this.menuOpen = false
       if (cmd === 'logout') {
         this.logout()
         this.$router.push('/login')
@@ -283,6 +347,29 @@ export default {
   border-color: var(--brand);
   color: var(--brand);
 }
+
+/* 移动端汉堡按钮：桌面隐藏 */
+.menu-btn {
+  display: none;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--bg-0);
+  color: var(--ink-2);
+  cursor: pointer;
+  place-items: center;
+  transition: 0.2s;
+}
+.menu-btn svg {
+  width: 20px;
+  height: 20px;
+}
+.menu-btn:active {
+  background: var(--bg-2);
+}
+
 .content {
   flex: 1;
   width: 100%;
@@ -334,8 +421,143 @@ export default {
     transform: translateX(0);
   }
 }
-.tabbar {
+
+/* 移动端右下角悬浮：桌面隐藏 */
+.mobile-dock {
   display: none;
+}
+
+/* 抽屉与遮罩：桌面默认不存在（v-if 控制，这里只定义桌面不显示的兜底） */
+.drawer-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(11, 16, 32, 0.42);
+  backdrop-filter: blur(2px);
+}
+.drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 210;
+  width: min(78vw, 320px);
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-0);
+  box-shadow: var(--sh-3);
+  padding: calc(var(--s-6) + env(safe-area-inset-top, 0px)) var(--s-5) var(--s-6);
+  overflow-y: auto;
+}
+.drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--s-5);
+}
+.drawer-title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--ink-4);
+  text-transform: uppercase;
+}
+.drawer-close {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--ink-3);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+.drawer-close svg {
+  width: 18px;
+  height: 18px;
+}
+.drawer-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.drawer-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-radius: var(--r-md);
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--ink-2);
+  transition: 0.2s;
+}
+.drawer-item .chev {
+  width: 16px;
+  height: 16px;
+  color: var(--ink-4);
+}
+.drawer-item:hover {
+  background: var(--bg-1);
+}
+.drawer-item.active {
+  color: var(--brand);
+  background: var(--brand-weak);
+  font-weight: 600;
+}
+.drawer-item.active .chev {
+  color: var(--brand);
+}
+.drawer-foot {
+  margin-top: auto;
+  padding-top: var(--s-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+.drawer-btn {
+  width: 100%;
+  border: 1px solid var(--line);
+  background: var(--bg-0);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 13px 16px;
+  border-radius: var(--r-pill);
+  cursor: pointer;
+  transition: 0.2s;
+}
+.drawer-btn.primary {
+  background: var(--accent-gradient);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: var(--sh-brand);
+}
+.drawer-btn.danger {
+  color: var(--danger);
+  border-color: var(--danger-bg);
+  background: var(--danger-bg);
+}
+
+/* 抽屉动画 */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.26s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+.slide-enter-active,
+.slide-leave-active {
+  transition: transform 0.32s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.slide-enter-from,
+.slide-leave-to {
+  transform: translateX(100%);
 }
 
 @media (max-width: 760px) {
@@ -348,49 +570,99 @@ export default {
     width: 30px;
     height: 30px;
     border-radius: 9px;
-    font-size: 16px;
+  }
+  .brand .mark svg {
+    width: 16px;
+    height: 16px;
+  }
+  .brand-text b {
+    font-size: 15px;
   }
   .brand-text small {
     display: none;
   }
-  .nav {
+  /* 移动端：隐藏桌面导航与账户区 */
+  .nav,
+  .balance,
+  .user,
+  .btn-nav {
     display: none;
   }
   .right {
     margin-left: auto;
     gap: var(--s-2);
   }
+  .menu-btn {
+    display: grid;
+  }
   .content {
-    padding: var(--s-3) var(--s-3) calc(72px + var(--safe-bottom));
+    padding: var(--s-3) var(--s-3) calc(84px + var(--safe-bottom));
   }
   .back-btn {
     padding: 8px 16px 8px 13px;
     font-size: 13px;
     margin-bottom: var(--s-3);
   }
-  .tabbar {
-    display: flex;
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 10;
-    height: 56px;
-    padding-bottom: var(--safe-bottom);
-    background: var(--bg-0);
-    border-top: 1px solid var(--line);
-  }
-  .tab-item {
-    flex: 1;
+
+  /* 右下角悬浮胶囊 */
+  .mobile-dock {
     display: flex;
     align-items: center;
-    justify-content: center;
-    font-size: var(--font-sm);
-    color: var(--ink-3);
+    position: fixed;
+    right: var(--s-3);
+    bottom: calc(var(--s-3) + var(--safe-bottom));
+    z-index: 60;
+    background: rgba(255, 255, 255, 0.94);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border: 1px solid var(--line);
+    border-radius: var(--r-pill);
+    box-shadow: var(--sh-3);
+    overflow: hidden;
   }
-  .tab-item.active {
-    color: var(--brand);
+  .dock-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 14px;
+    border: 0;
+    background: transparent;
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--ink-3);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .dock-row:active {
+    background: var(--bg-2);
+  }
+  .dock-divider {
+    width: 1px;
+    height: 20px;
+    background: var(--line);
+    flex-shrink: 0;
+  }
+  .dock-label {
+    color: var(--ink-4);
+  }
+  .dock-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--brand);
+    color: #fff;
+    display: grid;
+    place-items: center;
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .dock-name {
     font-weight: 600;
+    color: var(--ink);
+    max-width: 76px;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }
 </style>
