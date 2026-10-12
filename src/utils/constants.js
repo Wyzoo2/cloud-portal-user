@@ -17,6 +17,20 @@ export const APP_MENU = [
 export const PRODUCT_LINE = { storage: '云存储', phone: '云手机', desktop: '云电脑' }
 export const productLineName = code => PRODUCT_LINE[code] || code || '-'
 
+/* ── sku_id → 可读规格 ──
+   流水明细里只带 sku_id（如 storage-100g），直接显示是一串英文代码。
+   按约定 `产品线-规格[-…]` 拆开翻译：storage-100g → 云存储·100G。
+   不符合约定的一律原样返回，绝不显示空白。 */
+export function skuDisplayName(skuId) {
+  if (!skuId) return ''
+  const s = String(skuId)
+  const m = s.match(/^(storage|phone|desktop)-(.+)$/)
+  if (!m) return s
+  const line = PRODUCT_LINE[m[1]] || m[1]
+  const spec = m[2].split('-').map(part => part.toUpperCase()).join(' ')
+  return `${line}·${spec}`
+}
+
 /* ── 状态 → { text, type }，type 为 el-tag 的取值 ── */
 
 // 订单状态：0 待支付 · 1 部分成功 · 2 全部成功 · 3 全部失败

@@ -695,7 +695,9 @@ export default {
   .dock-name {
     font-weight: 600;
     color: var(--ink);
-    max-width: 76px;
+    /* 76px 会把 lichangrong 这类 11 字符用户名截成 "lichangro…"，放宽到 118px */
+    max-width: 118px;
+    white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }

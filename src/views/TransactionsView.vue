@@ -85,7 +85,7 @@ import { api } from '../api'
 import { formatTime, formatCents } from '../utils/format'
 import {
   TRANSACTION_TYPE, TRANSACTION_TYPE_TABS, productLineName,
-  DETAIL_LABELS, failReasonText
+  DETAIL_LABELS, failReasonText, skuDisplayName
 } from '../utils/constants'
 import { AmountText, PagedTable, EmptyState, StatusTag, PageBand, Panel, SiteFooter } from '../components'
 
@@ -94,6 +94,7 @@ function detailValueText(key, v) {
   if (v == null || v === '') return ''
   if (typeof v === 'object') return ''
   if (key === 'product_code') return productLineName(v)
+  if (key === 'sku_id') return skuDisplayName(v)
   if (key === 'fail_reason') return failReasonText(v)
   if (key.endsWith('_cents')) return formatCents(Number(v))
   return String(v)
