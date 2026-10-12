@@ -240,15 +240,13 @@ export default {
     },
     /** 页头带下方指标：全部取自当前目录响应，口径写在标签里 */
     kpis() {
-      const latest = this.list.reduce((max, p) => {
-        const t = p.synced_at ? new Date(p.synced_at).getTime() : 0
-        return t > max ? t : max
-      }, 0)
+      // 取最新的 synced_at 原始字符串（ISO 串可直接按字典序比较，避免多余的 Date 往返）
+      const latest = this.list.reduce((max, p) => (p.synced_at && p.synced_at > max ? p.synced_at : max), '')
       return [
         { label: '在售 SKU', value: String(this.list.length), unit: '个' },
         { label: '可下单产品线', value: String(this.lineCount), unit: '条' },
         { label: '账户余额', value: this.balanceCents == null ? '-' : formatCents(this.balanceCents) },
-        { label: '最近目录同步', value: latest ? formatTime(new Date(latest).toISOString()) : '-' }
+        { label: '最近目录同步', value: latest ? formatTime(latest) : '-' }
       ]
     },
     lineFilterLabel() {

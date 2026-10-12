@@ -3,7 +3,7 @@
     <PageBand
       :crumb="[{ text: '首页', to: '/' }, { text: '账户中心', to: '/account' }, { text: '消费流水' }]"
       title="消费流水"
-      desc="每一笔充值、扣费、退款与调账都记在这里；时间按本地时区展示，明细是产品原样传入的 JSON。"
+      desc="每一笔充值、扣费、退款与调账都记在这里；时间为后端返回的时间，明细是产品原样传入的 JSON。"
     >
       <template #side>
         <div class="band-stat">

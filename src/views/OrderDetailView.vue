@@ -47,8 +47,6 @@
             <b>{{ order.paid_at ? formatTime(order.paid_at) : '-' }}</b>
           </div>
         </div>
-        <!-- 后端已知缺陷：created_at / paid_at 存在时区偏移，仅作展示，不参与任何逻辑判断 -->
-        <p class="tz-tip">时间按本地时区展示，仅供参考</p>
       </div>
 
       <!-- 进度时间线（移动端竖排） -->
@@ -545,11 +543,6 @@ export default {
 }
 .danger {
   color: var(--danger);
-}
-.tz-tip {
-  margin: var(--s-3) 0 0;
-  font-size: var(--font-xs);
-  color: var(--ink-4);
 }
 
 /* ── 时间线（竖排） ── */
