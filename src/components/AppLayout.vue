@@ -67,8 +67,10 @@
       <router-view />
     </main>
 
-    <!-- 移动端：右下角悬浮（余额 + 用户） -->
-    <div v-if="isLoggedIn" class="mobile-dock">
+    <!-- 移动端不做底部 Tab 导航（产品要求：底栏会挡住商品/订单等页面的主操作与页脚）。
+         移动端导航由「顶栏汉堡抽屉」承担，底部只保留右下角这颗悬浮胶囊（余额 + 当前账号）。
+         订单详情页有固定支付栏，那一页不显示悬浮胶囊，避免盖住「立即支付」。 -->
+    <div v-if="isLoggedIn && !hideDock" class="mobile-dock">
       <button class="dock-row" @click="$router.push('/account')">
         <span class="dock-label">余额</span>
         <AmountText :cents="balanceCents" strong />
@@ -174,6 +176,10 @@ export default {
     },
     balanceCents() {
       return this.balance ? this.balance.balance_cents : null
+    },
+    // 订单详情页底部有固定支付栏，悬浮胶囊会让开（否则会压住「立即支付」）
+    hideDock() {
+      return /^\/orders\/[^/]+$/.test(this.$route.path)
     }
   },
   created() {
@@ -267,7 +273,12 @@ export default {
 }
 .header.dark .menu-btn {
   color: #fff;
+  /* 深色页头上背景必须是半透明白，否则白底 + 白图标 = 看不见的方块 */
+  background: rgba(255, 255, 255, 0.12);
   border-color: rgba(255, 255, 255, 0.24);
+}
+.header.dark .menu-btn:active {
+  background: rgba(255, 255, 255, 0.22);
 }
 .header.dark .btn-nav.ghost {
   color: #fff;
@@ -448,7 +459,7 @@ export default {
 }
 /* 「返回上一级」已由页面内的面包屑承担，这里不再有行内返回按钮 */
 
-/* 移动端右下角悬浮：桌面隐藏 */
+/* 移动端右下角悬浮胶囊（余额 + 账号）：桌面隐藏，移动端在 media query 里打开 */
 .mobile-dock {
   display: none;
 }
@@ -621,28 +632,15 @@ export default {
     display: grid;
   }
   .content {
-    padding: var(--s-3) var(--s-3) calc(84px + var(--safe-bottom));
+    padding: var(--s-3) var(--s-3) calc(var(--s-10) + var(--safe-bottom));
   }
-  /* 首页移动端同样通栏（深色带要贴边），只留底部给悬浮 dock 的余量 */
+  /* 首页与内页都是通栏（深色带要贴边），底部余量由页脚自己让开悬浮胶囊 */
   .content.full {
-    padding: 0 0 calc(84px + var(--safe-bottom));
+    padding: 0;
   }
-  .tabbar {
-    display: flex;
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 10;
-    /* 全站 box-sizing: border-box，高度必须把安全区加进去，
-       否则 iPhone 34px 安全区会把 56px 内容盒压成 22px，触控目标不达标 */
-    height: calc(56px + var(--safe-bottom));
-    padding-bottom: var(--safe-bottom);
-    background: var(--bg-0);
-    border-top: 1px solid var(--line);
-  }
-  .tab-item {
-    flex: 1;
+
+  /* ── 右下角悬浮胶囊（余额 + 账号）── */
+  .mobile-dock {
     display: flex;
     align-items: center;
     position: fixed;

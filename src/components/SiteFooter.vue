@@ -179,5 +179,9 @@ export default {
   .links {
     gap: 18px;
   }
+  /* 移动端：让开右下角悬浮胶囊与安全区，深色页脚一直铺到底边 */
+  .note {
+    padding-bottom: calc(64px + var(--safe-bottom));
+  }
 }
 </style>
