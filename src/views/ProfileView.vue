@@ -37,7 +37,7 @@ import { mapState, mapActions } from 'pinia'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '../store'
 import { api } from '../api'
-import { errorMessage } from '../utils/errors'
+import { errorText } from '../utils/errors'
 
 export default {
   name: 'ProfileView',
@@ -95,7 +95,7 @@ export default {
         if (e && e.code === 2003) {
           this.error = '当前密码错误'
         } else {
-          this.error = errorMessage(e && e.code, e && e.message)
+          this.error = errorText(e)
         }
       } finally {
         this.loading = false

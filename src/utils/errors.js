@@ -1,6 +1,6 @@
 /**
  * 错误码 → 人话提示映射（板块 A · A6）
- * 全站统一从这里取文案，页面有更精准提示时可覆盖。
+ * 全站统一从这里取文案：页面不要自己写错误分支文案，也不要再各抄一份 1001 的展开逻辑。
  */
 import { ElMessage } from 'element-plus'
 
@@ -30,9 +30,28 @@ export function errorMessage(code, fallback) {
   return ERROR_MESSAGES[code] || fallback || '请求失败，请稍后重试'
 }
 
-/** 直接 toast 一个业务错误（e 为拦截器抛出的 body：{ code, message, data }） */
+/**
+ * 业务错误 → 逐条人话数组
+ * 1001 的 data.errors 是「字符串数组」（每个非法字段一条），必须逐条展示；
+ * 其他情况退化成单条，永远不返回空数组、也不会出现"未知错误"。
+ */
+export function errorList(e) {
+  if (e && e.code === 3003) return []
+  const errs = e && e.data && Array.isArray(e.data.errors) ? e.data.errors : []
+  const list = errs.map(x => String(x)).filter(s => s && s.trim())
+  if (list.length) return list
+  const msg = e && e.code != null ? errorMessage(e.code, e && e.message) : (e && e.message)
+  return [msg || '请求失败，请稍后重试']
+}
+
+/** 业务错误 → 单条人话（多条用「；」连接，适合 el-alert / 表单下方） */
+export function errorText(e) {
+  return errorList(e).join('；')
+}
+
+/** 直接 toast 一个业务错误（多条逐条弹，e 为拦截器抛出的 body：{ code, message, data }） */
 export function toastError(e) {
-  const code = e && e.code
-  const msg = code != null ? errorMessage(code, e && e.message) : (e && e.message)
-  ElMessage.error(msg || '请求失败，请稍后重试')
+  const list = errorList(e)
+  if (!list.length) return
+  list.forEach(msg => ElMessage.error(msg))
 }

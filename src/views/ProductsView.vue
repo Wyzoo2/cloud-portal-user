@@ -6,8 +6,8 @@
       <p class="sub">价格为目录缓存价（10 分钟级同步），最终以下单时价格为准</p>
     </div>
 
-    <!-- 产品线筛选 -->
-    <div class="tabs">
+    <!-- 产品线筛选：PC 行内 tabs；移动端收进底部抽屉（同一份 tabs 配置） -->
+    <div v-if="!isMobile" class="tabs">
       <button
         v-for="t in tabs"
         :key="t.value"
@@ -18,6 +18,23 @@
         {{ t.label }}
       </button>
     </div>
+    <div v-else class="filter-bar">
+      <button class="filter-btn" @click="drawer = true">
+        筛选：{{ lineFilterLabel }} <span class="caret">▾</span>
+      </button>
+    </div>
+
+    <el-drawer v-model="drawer" direction="btt" size="auto" title="按产品线筛选">
+      <button
+        v-for="t in tabs"
+        :key="t.value"
+        class="drawer-item"
+        :class="{ active: productCode === t.value }"
+        @click="switchTab(t.value)"
+      >
+        {{ t.label }}
+      </button>
+    </el-drawer>
 
     <LoadingBox :loading="loading" :rows="6">
       <!-- 出错 -->
@@ -25,8 +42,10 @@
         <el-button type="primary" @click="load">重新加载</el-button>
       </EmptyState>
 
-      <!-- 空态 -->
-      <EmptyState v-else-if="!list.length" description="该产品线暂时没有可售商品" />
+      <!-- 空态：可能是该产品线没货，也可能是后端目录还没同步，给个刷新出口 -->
+      <EmptyState v-else-if="!list.length" description="该产品线暂时没有可售商品">
+        <el-button type="primary" @click="load">刷新商品</el-button>
+      </EmptyState>
 
       <!-- 商品卡片 -->
       <div v-else class="grid">
@@ -38,9 +57,9 @@
         >
           <div class="card-top">
             <span class="line">{{ lineName(p.product_code) }}</span>
-            <!-- 库存三态：null=现货 / 数字=剩 N / 0=售罄 -->
+            <!-- 库存三态：null/缺失=现货 / 数字=剩 N / 0=售罄 -->
             <span v-if="isSoldOut(p)" class="stock out">已售罄</span>
-            <span v-else-if="p.stock === null" class="stock in">现货</span>
+            <span v-else-if="!isStockKnown(p)" class="stock in">现货</span>
             <span v-else class="stock in">剩 {{ p.stock }}</span>
           </div>
 
@@ -69,10 +88,10 @@
           <el-button
             class="buy"
             type="primary"
-            :disabled="isSoldOut(p)"
+            :disabled="isSoldOut(p) || isFrozen"
             @click="onBuy(p)"
           >
-            {{ isSoldOut(p) ? '已售罄' : '立即购买' }}
+            {{ buyLabel(p) }}
           </el-button>
         </div>
       </div>
@@ -126,10 +145,13 @@
 </template>
 
 <script>
-import { mapState } from 'pinia'
+import { mapActions, mapState } from 'pinia'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { api } from '../api'
 import { useUserStore } from '../store'
+import { productLineName, PRODUCT_LINE } from '../utils/constants'
+import { errorList, errorText } from '../utils/errors'
+import { useIsMobile } from '../utils/breakpoint'
 import { AmountText, EmptyState, LoadingBox } from '../components'
 
 // 规格字段的展示名/单位：只影响"好不好看"，未知 key 会原样显示，不影响兼容
@@ -140,11 +162,13 @@ const SPEC_LABEL = {
 }
 const SPEC_UNIT = { quota_gb: 'GB', ram_gb: 'GB', storage_gb: 'GB', disk_gb: 'GB', vcpu: '核' }
 
-const LINE_NAME = { storage: '云存储', phone: '云手机', desktop: '云电脑' }
-
 export default {
   name: 'ProductsView',
   components: { AmountText, EmptyState, LoadingBox },
+  setup() {
+    const isMobile = useIsMobile()
+    return { isMobile }
+  },
   data() {
     return {
       list: [],
@@ -152,30 +176,37 @@ export default {
       error: false,
       errMsg: '商品加载失败，请稍后重试',
       productCode: '', // '' = 全部
+      drawer: false,
       // ── C2 下单弹窗 ──
       dialogVisible: false,
       current: null, // 当前选中的商品
       qty: 1,
       submitting: false,
+      // 产品线筛选 tab 从 PRODUCT_LINE 派生，不在页面里另抄一份文案
       tabs: [
         { value: '', label: '全部' },
-        { value: 'storage', label: '云存储' },
-        { value: 'phone', label: '云手机' },
-        { value: 'desktop', label: '云电脑' }
+        ...Object.entries(PRODUCT_LINE).map(([value, label]) => ({ value, label }))
       ]
     }
   },
   computed: {
-    ...mapState(useUserStore, ['user']),
+    ...mapState(useUserStore, ['user', 'isFrozen']),
     loggedIn() {
       return !!this.user
+    },
+    lineFilterLabel() {
+      const hit = this.tabs.find(t => t.value === this.productCode)
+      return hit ? hit.label : '全部'
     },
     // 单项数量上限：默认 1~10；云手机最多 3；有库存时不超过库存
     maxQty() {
       const p = this.current
       if (!p) return 1
       let m = p.product_code === 'phone' ? 3 : 10
-      if (typeof p.stock === 'number') m = Math.min(m, Math.max(1, p.stock))
+      const stock = Number(p.stock)
+      if (p.stock !== null && p.stock !== undefined && p.stock !== '' && !Number.isNaN(stock)) {
+        m = Math.min(m, Math.max(1, stock))
+      }
       return m
     },
     // 合计（整数分，全程不经过浮点）
@@ -187,6 +218,7 @@ export default {
     this.load()
   },
   methods: {
+    ...mapActions(useUserStore, ['refreshBalance']),
     async load() {
       this.loading = true
       this.error = false
@@ -197,30 +229,31 @@ export default {
       } catch (e) {
         this.error = true
         this.list = []
-        this.errMsg = this.readableError(e)
+        this.errMsg = errorText(e) || '商品加载失败，请稍后重试'
       } finally {
         this.loading = false
       }
     },
     switchTab(value) {
+      this.drawer = false
       if (this.productCode === value) return
       this.productCode = value
       this.load()
     },
-    // 错误一律转成中文人话，绝不出现"未知错误"
-    readableError(e) {
-      if (!e) return '商品加载失败，请稍后重试'
-      // 1001 的 data.errors 是「字符串数组」，逐条拼起来
-      if (e.data && Array.isArray(e.data.errors) && e.data.errors.length) {
-        return e.data.errors.join('；')
-      }
-      return e.message || '商品加载失败，请稍后重试'
-    },
     lineName(code) {
-      return LINE_NAME[code] || code
+      return productLineName(code)
     },
     isSoldOut(p) {
-      return p.stock === 0
+      // stock 可能是 null（不限/未上报）、数字或字符串数字；只有明确为 0 才算售罄
+      return p.stock !== null && p.stock !== undefined && Number(p.stock) === 0
+    },
+    // stock 有值（含字符串数字）才算"已知库存"，否则按「现货」展示
+    isStockKnown(p) {
+      return p.stock !== null && p.stock !== undefined && p.stock !== '' && !Number.isNaN(Number(p.stock))
+    },
+    buyLabel(p) {
+      if (this.isFrozen) return '钱包已冻结'
+      return this.isSoldOut(p) ? '已售罄' : '立即购买'
     },
     // 把后端自定的 spec 对象转成可渲染的行；未知 key 也照常显示
     specEntries(spec) {
@@ -232,6 +265,11 @@ export default {
       }))
     },
     onBuy(p) {
+      // 钱包冻结时不给任何下单入口（文档要求：冻结态禁用所有支付入口）
+      if (this.isFrozen) {
+        ElMessage.warning('钱包已冻结，请联系平台解冻后再下单')
+        return
+      }
       // 商品页游客可看：点购买时才要求登录，登录后回到本页
       if (!this.loggedIn) {
         ElMessageBox.confirm('购买商品需要先登录，是否现在去登录？', '需要登录', {
@@ -261,6 +299,10 @@ export default {
     // 提交订单：★ 入参不带任何价格字段，后端按当前价重算
     async submitOrder() {
       if (this.submitting || !this.current) return // 防重复提交
+      if (this.isFrozen) {
+        ElMessage.warning('钱包已冻结，请联系平台解冻后再下单')
+        return
+      }
       const p = this.current
       this.submitting = true
       try {
@@ -277,12 +319,12 @@ export default {
       }
     },
 
-    // 下单错误统一处置（对照文档 §3.4 错误码表）
+    // 下单错误统一处置（文案走 utils/errors，不在这里另抄一份）
     handleOrderError(e) {
       const code = e && e.code
-      // 1001：data.errors 是「字符串数组」，必须逐条展示
+      // 1001：data.errors 是「字符串数组」，逐条展示
       if (code === 1001) {
-        const errs = e.data && Array.isArray(e.data.errors) ? e.data.errors : []
+        const errs = errorList(e)
         if (errs.length) {
           errs.forEach(m => ElMessage.warning(m))
           return
@@ -301,12 +343,17 @@ export default {
       if (code === 4002) { ElMessage.info('订单正在处理中，请勿重复提交'); return }
       if (code === 4003) { ElMessage.warning('商品已下架，正在刷新列表'); this.load(); return }
       if (code === 4004) { ElMessage.warning('库存不足，请减少数量或稍后再试'); this.load(); return }
+      if (code === 3002) {
+        ElMessage.warning('钱包已冻结，请联系平台解冻后再试')
+        this.refreshBalance() // 同步冻结态到页头
+        return
+      }
       if (code === 1002) {
         ElMessage.warning('登录已过期，请重新登录')
         this.$router.push({ name: 'login', query: { redirect: this.$route.fullPath } })
         return
       }
-      ElMessage.error((e && e.message) || '下单失败，请稍后重试')
+      ElMessage.error(errorText(e) || '下单失败，请稍后重试')
     }
   }
 }
@@ -350,6 +397,47 @@ export default {
   background: var(--accent);
   border-color: var(--accent);
   color: #fff;
+}
+
+/* 移动端筛选：一个筛选按钮 + 底部抽屉（与订单页同一套观感） */
+.filter-bar {
+  margin-bottom: var(--space-md);
+}
+.filter-btn {
+  width: 100%;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-size: var(--font-sm);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+.filter-btn .caret {
+  color: var(--text-secondary);
+}
+.drawer-item {
+  width: 100%;
+  min-height: 48px;
+  margin-bottom: var(--space-sm);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-size: var(--font-base);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+.drawer-item.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  font-weight: 600;
 }
 
 /* 商品卡片网格：PC 三列 / 移动端两列 */
@@ -502,11 +590,15 @@ export default {
   .buy {
     height: 44px;
   }
-  .tab {
+  /* 下单弹窗内的控件也不能只有 32px（EP 默认尺寸） */
+  .products :deep(.el-dialog .el-input-number),
+  .products :deep(.el-dialog .el-input-number__decrease),
+  .products :deep(.el-dialog .el-input-number__increase) {
     min-height: 44px;
-    padding: 10px 18px;
-    display: inline-flex;
-    align-items: center;
+  }
+  .products :deep(.el-dialog__footer .el-button) {
+    min-height: 44px;
+    padding: 0 20px;
   }
 }
 </style>

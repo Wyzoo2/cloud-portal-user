@@ -25,7 +25,10 @@
         <!-- 已登录：余额 + 用户下拉 -->
         <template v-if="isLoggedIn">
           <div class="balance" @click="$router.push('/wallet')">
-            余额 <AmountText :cents="balanceCents" strong />
+            <template v-if="isFrozen">
+              <span class="frozen-tag">已冻结</span>
+            </template>
+            <template v-else>余额 <AmountText :cents="balanceCents" strong /></template>
           </div>
           <el-dropdown @command="onCommand">
             <span class="user">
@@ -58,11 +61,8 @@
         <span>返回{{ backTarget.label }}</span>
       </button>
 
-      <router-view v-slot="{ Component }">
-        <transition name="page" mode="out-in">
-          <component :is="Component" />
-        </transition>
-      </router-view>
+      <!-- 页面过渡统一由 App.vue 提供，这里不要再包一层 transition，否则动画叠加 -->
+      <router-view />
     </main>
 
     <!-- 移动端底部 Tab -->
@@ -95,7 +95,7 @@ export default {
     window.removeEventListener('scroll', this.onScroll)
   },
   computed: {
-    ...mapState(useUserStore, ['user', 'balance']),
+    ...mapState(useUserStore, ['user', 'balance', 'isFrozen']),
     isLoggedIn() {
       return !!this.user
     },
@@ -121,6 +121,13 @@ export default {
   created() {
     // 游客不拉余额：否则无 token 调 /wallet/balance 会吃 1002，被拦截器整页跳去登录
     if (this.isLoggedIn) this.refreshBalance()
+  },
+  watch: {
+    // 布局壳只创建一次，不监听路由就永远停在首次余额快照；
+    // 支付成功、充值到账后切页面即可拿到最新余额（D 组支付成功后也可直接调 store.refreshBalance()）
+    '$route.fullPath'() {
+      if (this.isLoggedIn) this.refreshBalance()
+    }
   },
   methods: {
     ...mapActions(useUserStore, ['logout', 'refreshBalance']),
@@ -233,6 +240,17 @@ export default {
   color: var(--ink-3);
   white-space: nowrap;
 }
+/* 冻结态：页头必须一眼看出来，且点进去是钱包页的冻结说明 */
+.frozen-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: var(--r-pill);
+  background: var(--danger-bg);
+  color: var(--danger);
+  font-size: 12px;
+  font-weight: 700;
+}
 .user {
   display: flex;
   align-items: center;
@@ -338,7 +356,7 @@ export default {
   display: none;
 }
 
-@media (max-width: 760px) {
+@media (max-width: 768px) {
   .header {
     gap: var(--s-2);
     height: 56px;
@@ -375,7 +393,9 @@ export default {
     right: 0;
     bottom: 0;
     z-index: 10;
-    height: 56px;
+    /* 全站 box-sizing: border-box，高度必须把安全区加进去，
+       否则 iPhone 34px 安全区会把 56px 内容盒压成 22px，触控目标不达标 */
+    height: calc(56px + var(--safe-bottom));
     padding-bottom: var(--safe-bottom);
     background: var(--bg-0);
     border-top: 1px solid var(--line);

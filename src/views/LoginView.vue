@@ -36,9 +36,10 @@
           <el-button class="submit" type="primary" size="large" native-type="submit" :loading="loading">
             登录
           </el-button>
-          <el-alert v-if="error" class="alert" :title="error" type="error" :closable="false" show-icon />
+          <!-- 1001 是字符串数组：逐条展示，不要合并成一句 -->
+          <el-alert v-for="(msg, i) in errors" :key="i" class="alert" :title="msg" type="error"
+            :closable="false" show-icon />
         </el-form>
-        <div v-if="showDemoTip" class="demo-tip">演示账号：demo / demo1234</div>
         <div class="foot">
           还没有账号？<router-link to="/register">立即注册</router-link>
         </div>
@@ -49,8 +50,7 @@
 
 <script>
 import { useUserStore } from '../store'
-import { errorMessage } from '../utils/errors'
-import { USE_MOCK } from '../mock'
+import { errorList } from '../utils/errors'
 
 export default {
   name: 'LoginView',
@@ -62,10 +62,8 @@ export default {
         password: [{ required: true, message: '请输入密码', trigger: 'blur' }]
       },
       loading: false,
-      error: '',
-      notice: '',
-      // 仅 mock 模式展示演示账号提示
-      showDemoTip: USE_MOCK
+      errors: [],
+      notice: ''
     }
   },
   created() {
@@ -77,7 +75,7 @@ export default {
       const valid = await this.$refs.formRef.validate().catch(() => false)
       if (!valid) return
       this.loading = true
-      this.error = ''
+      this.errors = []
       try {
         await useUserStore().login(this.form.username, this.form.password)
         const redirect = this.$route.query.redirect
@@ -85,8 +83,8 @@ export default {
           redirect && String(redirect).startsWith('/') ? redirect : '/'
         )
       } catch (e) {
-        // 按错误码细分文案：2003 账密错误 / 2004 禁用 / 1001 参数
-        this.error = errorMessage(e && e.code, e && e.message)
+        // 2003 账密错误 / 2004 禁用 / 1001 参数；1001 的多条会逐条渲染成多条 alert
+        this.errors = errorList(e)
       } finally {
         this.loading = false
       }
@@ -195,15 +193,6 @@ export default {
 }
 .alert {
   margin-top: 12px;
-}
-.demo-tip {
-  margin-top: 18px;
-  font-size: 12px;
-  color: var(--ink-3);
-  text-align: center;
-  background: var(--bg-1);
-  border-radius: var(--r-sm);
-  padding: 8px;
 }
 .foot {
   margin-top: 14px;

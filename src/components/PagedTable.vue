@@ -30,13 +30,17 @@
       </div>
     </div>
 
-    <!-- 空态 -->
-    <EmptyState v-else-if="!loading" :description="emptyText" />
+    <!-- 空态（需要引导按钮时用 #empty 插槽，如「去充值」「去逛商品」） -->
+    <template v-else-if="!loading">
+      <slot name="empty">
+        <EmptyState :description="emptyText" />
+      </slot>
+    </template>
 
-    <!-- 分页 -->
+    <!-- 分页：移动端去掉 sizes 选择器（375px 放不下会挤爆），并夹住 size 上限 -->
     <div v-if="total > 0" class="pager">
-      <el-pagination background layout="total, sizes, prev, pager, next"
-        :current-page="page" :page-size="size" :page-sizes="pageSizes" :total="total"
+      <el-pagination background :layout="pagerLayout"
+        :current-page="page" :page-size="safeSize" :page-sizes="safePageSizes" :total="total"
         @current-change="onPageChange" @size-change="onSizeChange" />
     </div>
   </div>
@@ -65,6 +69,22 @@ export default {
   setup() {
     const isMobile = useIsMobile()
     return { isMobile }
+  },
+  computed: {
+    // 后端 size 上限 100：外部传超限值时这里兜住
+    safePageSizes() {
+      const list = this.pageSizes.filter(n => Number(n) <= 100)
+      return list.length ? list : [20]
+    },
+    // 当前页大小也夹到 1~100
+    safeSize() {
+      const n = Number(this.size) || 20
+      return Math.min(Math.max(1, n), 100)
+    },
+    // 375px 宽度放不下 sizes 选择器，移动端只留翻页
+    pagerLayout() {
+      return this.isMobile ? 'prev, pager, next' : 'total, sizes, prev, pager, next'
+    }
   },
   methods: {
     cellSlot(key) { return 'cell-' + key },
@@ -118,9 +138,16 @@ export default {
   justify-content: flex-end;
   margin-top: var(--s-4);
 }
-@media (max-width: 760px) {
+@media (max-width: 768px) {
   .pager {
     justify-content: center;
+  }
+  /* 触控目标 ≥44px（移动端分页器） */
+  .pager :deep(.el-pagination button),
+  .pager :deep(.el-pager li) {
+    min-width: 44px;
+    height: 44px;
+    line-height: 44px;
   }
 }
 </style>

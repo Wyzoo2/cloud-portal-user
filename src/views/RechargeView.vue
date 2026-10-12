@@ -64,6 +64,7 @@ export default {
   },
   methods: {
     async submit() {
+      if (this.loading) return // 函数级防重（按钮 loading 只是视觉兜底）
       const amt = Number(this.amount_cents)
       if (this.amount_cents == null || this.amount_cents === '' || Number.isNaN(amt)) {
         ElMessage.warning('请输入充值金额')

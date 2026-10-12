@@ -29,7 +29,8 @@
   --success: #12a56a; --success-bg: #e8f7f0;
   --warning: #e08a1e; --warning-bg: #fdf3e4;
   --danger: #e0455e;  --danger-bg: #fdecef;
-  --info: #415fff;    --info-bg: #eef1ff;
+  --error: #e0455e;   /* 与 --danger 同值，只为兼容旧写法 */
+  --info: #6b7180;    --info-bg: #f0f0f2;
 
   /* ── 圆角（只此 6 档） ── */
   --r-xs: 6px;
@@ -63,6 +64,11 @@
   --font-lg: 18px;
   --font-xl: 22px;
 
+  /* ── 行高 ── */
+  --lh-tight: 1.25;
+  --lh-base: 1.6;
+  --lh-loose: 1.8;
+
   /* ── 兼容旧变量（既有页面过渡用，逐步替换为上面的新名） ── */
   --accent: var(--brand);
   --accent2: #5c7cff;
@@ -75,10 +81,6 @@
   --border: var(--line);
   --divider: var(--line);
   --soft: var(--bg-1);
-  --success: #12a56a;
-  --warning: #e08a1e;
-  --error: #e0455e;
-  --info: #6b7180;
   --radius-sm: var(--r-sm);
   --radius: var(--r-lg);
   --radius-lg: var(--r-xl);
@@ -93,19 +95,85 @@
   --space-xl: 32px;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 
-  /* ── Element Plus 主色对齐 vivo 蓝 ── */
+  /* ── Element Plus 主题对齐 ──
+     light-N 语义：N 越大越浅（与白混色的比例 = N×10%），别写反。
+     light-3 = 30% 白，light-9 = 90% 白；dark-2 = 主色压暗 20%。 */
   --el-color-primary: #415fff;
-  --el-color-primary-light-3: #c6cfff;
+  --el-color-primary-light-3: #7a8fff;
   --el-color-primary-light-5: #a0afff;
-  --el-color-primary-light-7: #7a8fff;
-  --el-color-primary-light-8: #677fff;
-  --el-color-primary-light-9: #546fff;
-  --el-color-primary-dark-2: #2743e6;
+  --el-color-primary-light-7: #c6cfff;
+  --el-color-primary-light-8: #d9dfff;
+  --el-color-primary-light-9: #ecefff;
+  --el-color-primary-dark-2: #344ccc;
+
+  /* 功能色同样要覆盖，否则 EP 默认的 #67c23a/#f56c6c 会和门户状态色同屏打架 */
+  --el-color-success: #12a56a;
+  --el-color-success-light-3: #59c097;
+  --el-color-success-light-5: #88d2b4;
+  --el-color-success-light-7: #b8e4d2;
+  --el-color-success-light-8: #d0ede1;
+  --el-color-success-light-9: #e7f6f0;
+  --el-color-success-dark-2: #0e8455;
+
+  --el-color-warning: #e08a1e;
+  --el-color-warning-light-3: #e9ad61;
+  --el-color-warning-light-5: #efc48e;
+  --el-color-warning-light-7: #f5dbbb;
+  --el-color-warning-light-8: #f8e7d2;
+  --el-color-warning-light-9: #fbf3e8;
+  --el-color-warning-dark-2: #b36e18;
+
+  --el-color-danger: #e0455e;
+  --el-color-danger-light-3: #e97c8e;
+  --el-color-danger-light-5: #efa2ae;
+  --el-color-danger-light-7: #f5c7ce;
+  --el-color-danger-light-8: #f8d9de;
+  --el-color-danger-light-9: #fbecee;
+  --el-color-danger-dark-2: #b3374b;
+
+  --el-color-error: #e0455e;
+  --el-color-error-light-3: #e97c8e;
+  --el-color-error-light-5: #efa2ae;
+  --el-color-error-light-7: #f5c7ce;
+  --el-color-error-light-8: #f8d9de;
+  --el-color-error-light-9: #fbecee;
+  --el-color-error-dark-2: #b3374b;
+
+  --el-color-info: #6b7180;
+  --el-color-info-light-3: #979ba6;
+  --el-color-info-light-5: #b5b8bf;
+  --el-color-info-light-7: #d2d4d8;
+  --el-color-info-light-8: #e1e2e5;
+  --el-color-info-light-9: #f0f0f2;
+  --el-color-info-dark-2: #555a66;
+
+  --el-text-color-primary: var(--ink);
+  --el-text-color-regular: var(--ink-2);
+  --el-text-color-secondary: var(--ink-3);
+  --el-text-color-placeholder: var(--ink-4);
+  --el-text-color-disabled: var(--ink-4);
+  --el-border-color: var(--line-2);
+  --el-border-color-light: var(--line);
+  --el-border-color-lighter: var(--line);
+  --el-fill-color-blank: var(--bg-0);
+  --el-fill-color-light: var(--bg-1);
+  --el-bg-color: var(--bg-0);
+  --el-bg-color-page: var(--bg-1);
   --el-border-radius-base: 10px;
 }
 
+/* ============================================================
+   响应式断点（全站唯一口径，别再造新数值）
+   1000px —— 收紧：间距/版心缩放、双栏转单栏
+    768px —— 移动形态：PC 导航 ⇄ 底部 Tab、表格 ⇄ 卡片（= utils/breakpoint.js 的 MOBILE_MAX）
+    560px —— 窄屏：进一步压缩字号与内边距
+   JS 侧判断形态请用 utils/breakpoint.js 的 useIsMobile()
+   ============================================================ */
 @media (max-width: 1000px) {
   :root { --sec-pad: 64px; }
+}
+@media (max-width: 768px) {
+  :root { --sec-pad: 56px; }
 }
 @media (max-width: 560px) {
   :root { --sec-pad: 48px; }
@@ -127,6 +195,7 @@ body {
   font-family: "PingFang SC", "HarmonyOS Sans SC", "MiSans", "Source Han Sans SC",
     "Noto Sans SC", "Microsoft YaHei", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   font-size: var(--font-base);
+  line-height: var(--lh-base);
   color: var(--ink);
   background: var(--bg-1);
   font-variant-numeric: tabular-nums;

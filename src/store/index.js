@@ -2,7 +2,7 @@
  * 用户登录态 + 余额（pinia）
  */
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { storage } from '../utils/storage'
 import { api } from '../api'
 
@@ -10,6 +10,10 @@ export const useUserStore = defineStore('user', () => {
   const user = ref(storage.user || null)
   // { balance_cents, status }；status 0 正常 / 1 冻结
   const balance = ref(null)
+  // 余额拉取失败标记：让页面能显示错误态，而不是把 null 当成"正常"
+  const balanceError = ref(false)
+  // 钱包冻结：页头标识、支付/下单入口禁用都读它（status 可能是字符串，做一次数字归一）
+  const isFrozen = computed(() => Number(balance.value && balance.value.status) === 1)
 
   function setUser(u) {
     user.value = u
@@ -37,21 +41,24 @@ export const useUserStore = defineStore('user', () => {
     storage.clear()
     user.value = null
     balance.value = null
+    balanceError.value = false
     // 后端 logout 需要 Bearer，这里手动带上已保存的 token 吊销服务端 refresh cookie
     if (token) {
       api.logout(token).catch(() => {})
     }
   }
 
-  /** 拉取余额（布局壳常驻显示、支付/充值后刷新） */
+  /** 拉取余额（布局壳常驻显示、支付/充值后刷新）；失败置 balanceError 供页面出错误态 */
   async function refreshBalance() {
     try {
       balance.value = await api.getBalance()
+      balanceError.value = false
     } catch (e) {
       balance.value = null
+      balanceError.value = true
     }
     return balance.value
   }
 
-  return { user, balance, setUser, login, register, logout, refreshBalance }
+  return { user, balance, balanceError, isFrozen, setUser, login, register, logout, refreshBalance }
 })

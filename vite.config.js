@@ -2,8 +2,7 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
 // 后端地址：默认指向内网测试环境（开发文档里写的 192.168.9.100 已过期，实际是 .103）。
-// 注意：只有 USE_MOCK=false 时才会走到这里；连别的后端用环境变量覆盖即可：
-//   $env:API_TARGET="http://x.x.x.x:3000"; npm run dev
+// 连别的后端用环境变量覆盖即可：$env:API_TARGET="http://x.x.x.x:3000"; npm run dev
 const API_TARGET = process.env.API_TARGET || 'http://192.168.9.103:3000'
 
 // 启动时把实际生效的后端地址打出来，方便确认代理到底打到哪
@@ -16,7 +15,8 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': {
-        target: 'http://192.168.9.103:3000',
+        // 必须用 API_TARGET，否则环境变量覆盖不生效（曾被写死成字面量导致覆盖无效）
+        target: API_TARGET,
         changeOrigin: true
       }
     }

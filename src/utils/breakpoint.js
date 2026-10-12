@@ -1,11 +1,12 @@
 /**
  * 响应式断点（板块 A · A2）
- * 全站统一 760px（vivo 至简三断点 1000/760/560 的移动端阈值）；
- * 需要按屏幕切换形态的组件用 useIsMobile()，勿各自写 media query 判断逻辑。
+ * 全站统一三档：1000（收紧，仅间距/版心缩放）/ 768（移动形态，唯一开关）/ 560（窄屏）。
+ * CSS 里写 media query 只能用这三个值；JS 里需要按屏幕切形态一律用 useIsMobile()，
+ * 不要自己写 window.innerWidth 判断。
  */
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 
-export const MOBILE_MAX = 760
+export const MOBILE_MAX = 768
 
 export function useIsMobile() {
   const isMobile = ref(

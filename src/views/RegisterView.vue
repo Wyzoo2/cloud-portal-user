@@ -38,7 +38,9 @@
           <el-button class="submit" type="primary" size="large" native-type="submit" :loading="loading">
             注册
           </el-button>
-          <el-alert v-if="error" class="alert" :title="error" type="error" :closable="false" show-icon />
+          <!-- 1001 是字符串数组：逐条展示，不合并成一句 -->
+          <el-alert v-for="(msg, i) in errors" :key="i" class="alert" :title="msg" type="error"
+            :closable="false" show-icon />
         </el-form>
         <div class="foot">
           已有账号？<router-link to="/login">去登录</router-link>
@@ -50,7 +52,7 @@
 
 <script>
 import { useUserStore } from '../store'
-import { errorMessage } from '../utils/errors'
+import { errorList } from '../utils/errors'
 
 export default {
   name: 'RegisterView',
@@ -78,7 +80,7 @@ export default {
         ]
       },
       loading: false,
-      error: ''
+      errors: []
     }
   },
   methods: {
@@ -86,7 +88,7 @@ export default {
       const valid = await this.$refs.formRef.validate().catch(() => false)
       if (!valid) return
       this.loading = true
-      this.error = ''
+      this.errors = []
       try {
         await useUserStore().register({
           username: this.form.username,
@@ -95,12 +97,8 @@ export default {
         })
         this.$router.push('/')
       } catch (e) {
-        // 1001 的 data.errors 是字符串数组，逐条拼接展示
-        if (e && e.code === 1001 && e.data && Array.isArray(e.data.errors)) {
-          this.error = e.data.errors.join('；')
-        } else {
-          this.error = errorMessage(e && e.code, e && e.message)
-        }
+        // 2001/2002 走错误码映射；1001 的多条错误逐条展示
+        this.errors = errorList(e)
       } finally {
         this.loading = false
       }

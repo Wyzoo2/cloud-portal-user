@@ -7,10 +7,14 @@
         <AmountText :cents="balanceCents" />
       </div>
       <div class="bal-meta">
-        <span class="status" :class="{ frozen }">{{ frozen ? '已冻结' : '正常' }}</span>
+        <span class="status" :class="{ frozen, unknown: !balance }">{{ statusText }}</span>
         <span class="hint">预充值制账户 · 余额可用于所有产品线消费</span>
       </div>
       <div v-if="frozen" class="frozen-tip">钱包已冻结，请联系平台解冻后再支付</div>
+      <div v-else-if="balanceError" class="error-tip">
+        余额加载失败，请检查网络后重试
+        <el-button link type="primary" @click="reload">重新加载</el-button>
+      </div>
     </div>
 
     <!-- 入口 -->
@@ -57,6 +61,7 @@
 <script>
 import { mapState, mapActions } from 'pinia'
 import { useUserStore } from '../store'
+import { WALLET_STATUS } from '../utils/constants'
 import { AmountText } from '../components'
 
 export default {
@@ -66,22 +71,31 @@ export default {
     return { loading: false }
   },
   computed: {
-    ...mapState(useUserStore, ['balance']),
+    ...mapState(useUserStore, ['balance', 'balanceError']),
     balanceCents() {
       return this.balance ? this.balance.balance_cents : null
     },
     frozen() {
-      return !!(this.balance && this.balance.status === 1)
+      // status 可能是字符串，统一按数字判断
+      return Number(this.balance && this.balance.status) === 1
+    },
+    statusText() {
+      if (this.frozen) return WALLET_STATUS[1].text
+      if (!this.balance) return '—' // 拉取中或失败：不要谎报"正常"
+      return WALLET_STATUS[0].text
     }
   },
   created() {
-    this.loading = true
-    this.refreshBalance().finally(() => {
-      this.loading = false
-    })
+    this.reload()
   },
   methods: {
-    ...mapActions(useUserStore, ['refreshBalance'])
+    ...mapActions(useUserStore, ['refreshBalance']),
+    reload() {
+      this.loading = true
+      this.refreshBalance().finally(() => {
+        this.loading = false
+      })
+    }
   }
 }
 </script>
@@ -128,6 +142,11 @@ export default {
   color: var(--danger);
   background: var(--danger-bg);
 }
+/* 余额还没拿到（加载中/失败）：中性灰，不能显示成"正常" */
+.status.unknown {
+  color: var(--ink-3);
+  background: var(--bg-2);
+}
 .hint {
   font-size: 13px;
   color: var(--ink-3);
@@ -137,6 +156,14 @@ export default {
   font-size: 13px;
   color: var(--danger);
   background: var(--danger-bg);
+  padding: 12px 16px;
+  border-radius: var(--r-sm);
+}
+.error-tip {
+  margin-top: 16px;
+  font-size: 13px;
+  color: var(--warning);
+  background: var(--warning-bg);
   padding: 12px 16px;
   border-radius: var(--r-sm);
 }

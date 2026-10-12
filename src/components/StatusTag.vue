@@ -4,21 +4,31 @@
 
 <script>
 import { computed } from 'vue'
-import { ORDER_STATUS, ORDER_ITEM_STATUS, RECHARGE_STATUS } from '../utils/constants'
+import { ORDER_STATUS, ORDER_ITEM_STATUS, RECHARGE_STATUS, TRANSACTION_TYPE } from '../utils/constants'
 
-const MAPS = { order: ORDER_STATUS, orderItem: ORDER_ITEM_STATUS, recharge: RECHARGE_STATUS }
+const MAPS = {
+  order: ORDER_STATUS,
+  orderItem: ORDER_ITEM_STATUS,
+  recharge: RECHARGE_STATUS,
+  transaction: TRANSACTION_TYPE
+}
 
 export default {
   name: 'StatusTag',
   props: {
     // order | orderItem | recharge
     type: { type: String, required: true },
-    value: { type: [Number, String], required: true }
+    // el-table 预渲染表头时会用空 scope 调一次插槽，value 可能拿到 undefined：
+    // 所以不设 required，渲染成 '-'，避免控制台刷 prop 校验警告
+    value: { type: [Number, String], default: null }
   },
   setup(props) {
     const meta = computed(() => {
       const map = MAPS[props.type] || {}
-      return map[props.value] || { text: String(props.value), type: 'neutral' }
+      const hit = map[props.value]
+      if (hit) return hit
+      const text = props.value == null || props.value === '' ? '-' : String(props.value)
+      return { text, type: 'neutral' }
     })
     return { meta }
   }

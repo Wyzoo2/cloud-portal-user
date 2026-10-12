@@ -6,8 +6,8 @@
       <p class="sub">点任意一行查看订单详情</p>
     </div>
 
-    <!-- 状态筛选 -->
-    <div class="tabs">
+    <!-- 状态筛选：PC 行内 tabs；移动端收进底部抽屉（同一份 tabs 配置） -->
+    <div v-if="!isMobile" class="tabs">
       <button
         v-for="t in tabs"
         :key="t.label"
@@ -18,6 +18,23 @@
         {{ t.label }}
       </button>
     </div>
+    <div v-else class="filter-bar">
+      <button class="filter-btn" @click="drawer = true">
+        筛选：{{ statusLabel }} <span class="caret">▾</span>
+      </button>
+    </div>
+
+    <el-drawer v-model="drawer" direction="btt" size="auto" title="按状态筛选">
+      <button
+        v-for="t in tabs"
+        :key="t.label"
+        class="drawer-item"
+        :class="{ active: status === t.value }"
+        @click="switchTab(t.value)"
+      >
+        {{ t.label }}
+      </button>
+    </el-drawer>
 
     <!-- 出错 -->
     <EmptyState v-if="error" :description="errMsg">
@@ -34,7 +51,6 @@
       :page="page"
       :size="size"
       row-key="order_id"
-      :empty-text="status === '' ? '暂无订单' : '该状态下没有订单'"
       @page-change="onPageChange"
       @size-change="onSizeChange"
       @row-click="onRowClick"
@@ -51,6 +67,14 @@
       </template>
       <template #cell-created_at="{ row }">
         {{ formatTime(row.created_at) }}
+      </template>
+
+      <!-- 空态（表内）：筛选无结果时给出口，别让用户卡住 -->
+      <template #empty>
+        <EmptyState :description="status === '' ? '暂无订单' : `没有「${statusLabel}」的订单`">
+          <el-button v-if="status !== ''" type="primary" @click="switchTab('')">查看全部订单</el-button>
+          <el-button v-else type="primary" @click="$router.push('/products')">去逛商品</el-button>
+        </EmptyState>
       </template>
 
       <!-- 移动端卡片：订单号 + 状态 + 金额 + 时间 -->
@@ -78,19 +102,20 @@
 import { api } from '../api'
 import { PagedTable, StatusTag, AmountText, EmptyState } from '../components'
 import { formatTime } from '../utils/format'
+import { ORDER_STATUS_TABS } from '../utils/constants'
+import { errorText } from '../utils/errors'
+import { useIsMobile } from '../utils/breakpoint'
 
 /**
- * ★ 订单列表接口的字段适配（唯一改动点）
- * 契约里没有定义这个接口，字段形状以后端真实样例为准。
- * 后端样例来了之后，只改这个函数，页面其它地方不用动。
+ * 订单列表行适配：后端 GET /shop/orders 的字段为
+ * order_id / order_no / total_cents / status / created_at / paid_at / items[]
+ * （items 项含 name / sku_id / quantity）。商品概要由 items 派生，接口没有 summary 字段。
  */
 function normalizeRow(o) {
-  const summary =
-    o.summary ||
-    (Array.isArray(o.items)
-      ? o.items.map(i => `${i.name || i.sku_id || '商品'} ×${i.quantity || 1}`).join('，')
-      : '') ||
-    '-'
+  const items = Array.isArray(o.items) ? o.items : []
+  const summary = items.length
+    ? items.map(i => `${i.name || i.sku_id || '商品'} ×${i.quantity || 1}`).join('，')
+    : '-'
   return {
     order_id: o.order_id,
     order_no: o.order_no || '-',
@@ -104,6 +129,11 @@ function normalizeRow(o) {
 export default {
   name: 'OrdersView',
   components: { PagedTable, StatusTag, AmountText, EmptyState },
+  setup() {
+    // 移动端才用抽屉筛选；与服务端筛选参数无关
+    const isMobile = useIsMobile()
+    return { isMobile }
+  },
   data() {
     return {
       // 后端已支持 status 筛选参数（2026-10-10 加入，Swagger 可查），
@@ -113,17 +143,11 @@ export default {
       page: 1,
       size: 20,
       status: '', // '' = 全部
+      drawer: false,
       loading: true,
       error: false,
       errMsg: '订单加载失败，请稍后重试',
-      // 订单状态：0 待支付 · 1 部分成功 · 2 全部成功 · 3 全部失败
-      tabs: [
-        { value: '', label: '全部' },
-        { value: 0, label: '待支付' },
-        { value: 1, label: '部分成功' },
-        { value: 2, label: '全部成功' },
-        { value: 3, label: '全部失败' }
-      ],
+      tabs: ORDER_STATUS_TABS,
       columns: [
         { key: 'order_no', label: '订单号', minWidth: 170 },
         { key: 'summary', label: '商品', minWidth: 200 },
@@ -131,6 +155,12 @@ export default {
         { key: 'status', label: '状态', width: 110 },
         { key: 'created_at', label: '下单时间', width: 170 }
       ]
+    }
+  },
+  computed: {
+    statusLabel() {
+      const hit = this.tabs.find(t => t.value === this.status)
+      return hit ? hit.label : '全部'
     }
   },
   created() {
@@ -152,12 +182,13 @@ export default {
         this.error = true
         this.rows = []
         this.total = 0
-        this.errMsg = this.readableError(e)
+        this.errMsg = errorText(e) || '订单加载失败，请稍后重试'
       } finally {
         this.loading = false
       }
     },
     switchTab(value) {
+      this.drawer = false
       if (this.status === value) return
       this.status = value
       this.page = 1
@@ -174,15 +205,6 @@ export default {
     },
     onRowClick(row) {
       this.$router.push({ name: 'order-detail', params: { id: row.order_id } })
-    },
-    // 错误一律转中文人话，不出现"未知错误"
-    readableError(e) {
-      if (!e) return '订单加载失败，请稍后重试'
-      // 1001 的 data.errors 是「字符串数组」
-      if (e.data && Array.isArray(e.data.errors) && e.data.errors.length) {
-        return e.data.errors.join('；')
-      }
-      return e.message || '订单加载失败，请稍后重试'
     }
   }
 }
@@ -268,6 +290,47 @@ export default {
   white-space: nowrap;
 }
 
+/* 移动端筛选：一个筛选按钮 + 底部抽屉（触控目标 ≥44px，分页器尺寸由 PagedTable 统一处理） */
+.filter-bar {
+  margin-bottom: var(--space-md);
+}
+.filter-btn {
+  width: 100%;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-size: var(--font-sm);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+.filter-btn .caret {
+  color: var(--text-secondary);
+}
+.drawer-item {
+  width: 100%;
+  min-height: 48px;
+  margin-bottom: var(--space-sm);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-size: var(--font-base);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+.drawer-item.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+
 /* ── 移动端 ── */
 @media (max-width: 768px) {
   /* 触控目标 ≥ 44px：筛选按钮太小手指点不准 */
@@ -276,19 +339,6 @@ export default {
     padding: 10px 18px;
     display: inline-flex;
     align-items: center;
-  }
-  /* 分页器也是触控目标：A 组 PagedTable 用的是 el-pagination 默认尺寸（约 32px）。
-     用 :deep() 从外层放大，不修改 A 组的组件文件。 */
-  .orders :deep(.el-pagination) {
-    --el-pagination-button-height: 44px;
-    --el-pagination-button-width: 44px;
-  }
-  .orders :deep(.el-pagination button),
-  .orders :deep(.el-pager li) {
-    min-width: 44px;
-    height: 44px;
-    line-height: 44px;
-    font-size: var(--font-base);
   }
 }
 </style>
