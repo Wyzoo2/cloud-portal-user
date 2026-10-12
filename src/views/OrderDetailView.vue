@@ -750,7 +750,7 @@ export default {
 
 @media (max-width: 768px) {
   .body {
-    padding: var(--s-4) var(--s-3) 96px; /* 底部留给固定操作栏 */
+    padding: var(--s-4) var(--s-3) 96px; /* 底部留给固定操作栏（本页不显示悬浮胶囊） */
   }
   .head-card,
   .items-card,

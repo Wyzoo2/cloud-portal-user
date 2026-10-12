@@ -16,8 +16,19 @@ export default defineConfig({
     host: true,
     port: 5173,
     watch: {
-      // 编辑器/工具在源码目录里写临时文件时，watcher 抓到这些半成品会 EBUSY 直接崩掉 dev server，忽略掉
-      ignored: ['**/.*.tmp*', '**/*.tmp', '**/*.tmpdir/**', '**/.~*', '**/*.swp']
+      // 编辑器/工具在源码目录里写临时文件时，watcher 抓到这些半成品会 EBUSY 直接崩掉 dev server，忽略掉。
+      // 实测踩到过：SiteFooter.vue~RFa92383c.TMP（VS/MSBuild 风格的原子保存临时文件，大写 .TMP，前缀 ~RF）
+      ignored: [
+        '**/.*.tmp*',
+        '**/*.tmp',
+        '**/*.TMP',
+        '**/*.tmpdir/**',
+        '**/.~*',
+        '**/*~RF*',
+        '**/*.swp',
+        '**/*.swx',
+        '**/*.bak'
+      ]
     },
     proxy: {
       '/api': {
