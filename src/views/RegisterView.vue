@@ -49,6 +49,7 @@
 </template>
 
 <script>
+import { ElMessage } from 'element-plus'
 import { useUserStore } from '../store'
 import { errorMessage } from '../utils/errors'
 
@@ -93,6 +94,7 @@ export default {
           password: this.form.password,
           phone: this.form.phone || undefined
         })
+        ElMessage.success('注册成功，已自动登录')
         this.$router.push('/')
       } catch (e) {
         // 1001 的 data.errors 是字符串数组，逐条拼接展示

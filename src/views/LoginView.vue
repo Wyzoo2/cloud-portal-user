@@ -48,6 +48,7 @@
 </template>
 
 <script>
+import { ElMessage } from 'element-plus'
 import { useUserStore } from '../store'
 import { errorMessage } from '../utils/errors'
 import { USE_MOCK } from '../mock'
@@ -80,6 +81,7 @@ export default {
       this.error = ''
       try {
         await useUserStore().login(this.form.username, this.form.password)
+        ElMessage.success('登录成功')
         const redirect = this.$route.query.redirect
         this.$router.push(
           redirect && String(redirect).startsWith('/') ? redirect : '/'

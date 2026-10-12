@@ -129,6 +129,7 @@
 </template>
 
 <script>
+import { ElMessage } from 'element-plus'
 import { mapState, mapActions } from 'pinia'
 import { useUserStore } from '../store'
 import AmountText from './AmountText.vue'
@@ -199,6 +200,7 @@ export default {
       if (cmd === 'logout') {
         this.logout()
         this.$router.push('/login')
+        ElMessage.success('已退出登录')
       } else if (cmd === 'profile') {
         this.$router.push('/profile')
       }
