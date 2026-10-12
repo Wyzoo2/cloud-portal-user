@@ -329,6 +329,8 @@ export default {
         this.applyOrder(res)
         const accepted = Number((res && res.accepted_items) || 0)
         ElMessage.success(accepted > 0 ? `已受理 ${accepted} 项，正在开通` : '支付已受理，正在开通')
+        // 扣费是同步的：受理成功时钱已经从余额扣掉了，顶栏余额要立刻更新
+        this.refreshBalance()
         this.startPoll()
       } catch (e) {
         this.handlePayError(e)
@@ -448,6 +450,8 @@ export default {
       } else if (this.okCount) {
         ElMessage.success('开通完成')
       }
+      // 有失败项会自动退款，余额已变化，顶栏余额同步刷新
+      if (this.failCount) this.refreshBalance()
     }
   }
 }
