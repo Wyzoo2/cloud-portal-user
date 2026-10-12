@@ -1,36 +1,58 @@
 <template>
   <div class="recharges">
-    <div class="page-head" v-reveal>
-      <h2>充值记录</h2>
-      <el-radio-group v-model="status" @change="onFilter">
-        <el-radio-button v-for="t in tabs" :key="t.label" :value="t.value">{{ t.label }}</el-radio-button>
-      </el-radio-group>
+    <PageBand
+      :crumb="[{ text: '首页', to: '/' }, { text: '账户中心', to: '/account' }, { text: '充值记录' }]"
+      title="充值记录"
+      desc="充值走「提交申请 → 线下转账 → 管理员核销 → 余额到账」，这里看核销进度与驳回原因。"
+    >
+      <template #side>
+        <div class="band-stat">
+          <b class="figure">{{ total }}</b>
+          <span>记录条数</span>
+        </div>
+      </template>
+    </PageBand>
+
+    <div class="body">
+      <Panel title="充值申请记录" :small="`共 ${total} 条`">
+        <template #actions>
+          <el-radio-group v-model="status" @change="onFilter">
+            <el-radio-button v-for="t in tabs" :key="t.label" :value="t.value">{{ t.label }}</el-radio-button>
+          </el-radio-group>
+        </template>
+
+        <PagedTable :columns="columns" :rows="rows" :loading="loading" :total="total"
+          :page="page" :size="size" row-key="apply_id"
+          @page-change="onPage" @size-change="onSize">
+          <template #cell-amount_cents="{ row }">
+            <AmountText :cents="row.amount_cents" strong />
+          </template>
+          <template #cell-status="{ row }">
+            <StatusTag type="recharge" :value="row.status" />
+          </template>
+          <template #cell-balance_after="{ row }">
+            <AmountText :cents="row.balance_after" />
+          </template>
+          <template #cell-reject_reason="{ row }">
+            {{ row.reject_reason || '-' }}
+          </template>
+
+          <!-- 空态：无记录引导去充值；加载失败给重试 -->
+          <template #empty>
+            <EmptyState :description="error ? '充值记录加载失败，请稍后重试' : (status === '' ? '还没有充值记录' : '该状态下没有记录')">
+              <el-button v-if="error" type="primary" @click="load">重新加载</el-button>
+              <el-button v-else type="primary" @click="$router.push('/wallet/recharge')">去充值</el-button>
+            </EmptyState>
+          </template>
+        </PagedTable>
+      </Panel>
     </div>
 
-    <PagedTable v-reveal="{ delay: 100 }" :columns="columns" :rows="rows" :loading="loading" :total="total"
-      :page="page" :size="size" row-key="apply_id"
-      @page-change="onPage" @size-change="onSize">
-      <template #cell-amount_cents="{ row }">
-        <AmountText :cents="row.amount_cents" strong />
-      </template>
-      <template #cell-status="{ row }">
-        <StatusTag type="recharge" :value="row.status" />
-      </template>
-      <template #cell-balance_after="{ row }">
-        <AmountText :cents="row.balance_after" />
-      </template>
-      <template #cell-reject_reason="{ row }">
-        {{ row.reject_reason || '-' }}
-      </template>
-
-      <!-- 空态：无记录引导去充值；加载失败给重试 -->
-      <template #empty>
-        <EmptyState :description="error ? '充值记录加载失败，请稍后重试' : (status === '' ? '还没有充值记录' : '该状态下没有记录')">
-          <el-button v-if="error" type="primary" @click="load">重新加载</el-button>
-          <el-button v-else type="primary" @click="$router.push('/wallet/recharge')">去充值</el-button>
-        </EmptyState>
-      </template>
-    </PagedTable>
+    <SiteFooter
+      statement="被驳回的申请会写明原因，可以按同样流程重新提交。"
+      action-text="重新充值"
+      action-to="/wallet/recharge"
+    />
   </div>
 </template>
 
@@ -38,11 +60,11 @@
 import { api } from '../api'
 import { formatTime } from '../utils/format'
 import { RECHARGE_STATUS_TABS } from '../utils/constants'
-import { AmountText, StatusTag, PagedTable, EmptyState } from '../components'
+import { AmountText, StatusTag, PagedTable, EmptyState, PageBand, Panel, SiteFooter } from '../components'
 
 export default {
   name: 'RechargesView',
-  components: { AmountText, StatusTag, PagedTable, EmptyState },
+  components: { AmountText, StatusTag, PagedTable, EmptyState, PageBand, Panel, SiteFooter },
   data() {
     return {
       status: '',
@@ -104,24 +126,34 @@ export default {
 </script>
 
 <style scoped>
-.page-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: var(--s-3);
-  margin-bottom: var(--s-4);
+/* 通栏内容区（首页格式）：背景铺满屏幕，内容居中 */
+.body {
+  background: var(--bg-1);
+  padding: var(--s-7) var(--s-6) var(--s-11);
 }
-.page-head h2 {
-  font-size: 22px;
+.body > * {
+  max-width: var(--wrap-app);
+  margin-left: auto;
+  margin-right: auto;
+}
+.band-stat {
+  text-align: right;
+}
+.band-stat b {
+  display: block;
+  font-size: 28px;
   font-weight: 600;
-  letter-spacing: -0.3px;
-  margin: 0;
+  letter-spacing: -0.02em;
 }
-@media (max-width: 1000px) {
-  .page-head {
-    flex-direction: column;
-    align-items: flex-start;
+.band-stat span {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.55);
+}
+@media (max-width: 768px) {
+  .body {
+    padding: var(--s-4) var(--s-3) var(--s-10);
   }
 }
 </style>

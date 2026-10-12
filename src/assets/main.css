@@ -1,50 +1,67 @@
 /* ============================================================
-   全局样式 + 设计 token（vivo 官网「至简」美学）
-   参考《网站改版提示词》：单一主色 + 高级灰 + 大圆角 + 极浅阴影 + 克制动效
+   全局样式 + 设计 token
+   方案：首页 = B「深色顶带官网」，内页 = A「至简白」，主色 = 墨蓝 #1d3bd6
+   规则速查：
+   · 内页分区靠 1px 发丝线 + 浅灰色块，卡片不使用投影
+   · 圆角只有 8（控件/卡片）/ 12（容器）/ 16（大容器）三档 + 胶囊（状态）
+   · 主色只出现在 CTA、激活导航、关键数字、链接
+   · 数字一律 tabular-nums；表格表头 12px + 0.08em 字距
+   · 深色与玻璃只服务于首页首屏（B 方案），内页不出现
    ============================================================ */
 
 :root {
-  /* ── 品牌色（vivo 蓝，全站唯一主色） ── */
-  --brand: #415fff;
-  --brand-strong: #2743e6;
-  --brand-weak: #eef1ff;
-  --brand-weak-2: #dfe5ff;
-  /* 渐变只允许出现在：首屏标题关键词、CTA 主按钮、首屏主视觉光晕 */
-  --accent-gradient: linear-gradient(100deg, #415fff 0%, #7aa2ff 55%, #33d6ff 100%);
+  /* ── 品牌色（墨蓝，全站唯一主色） ── */
+  --brand: #1d3bd6;
+  --brand-strong: #172fab;
+  --brand-weak: #eef1fd;
+  --brand-weak-2: #dfe5fb;
+  --brand-hover: #2c4ae4;
+  /* 渐变只允许出现在：首页首屏关键词、主 CTA、首屏光晕 */
+  --accent-gradient: linear-gradient(100deg, #1d3bd6 0%, #4f7cff 55%, #33d6ff 100%);
+  --accent-gradient-soft: linear-gradient(100deg, #4f7cff, #33d6ff);
 
-  /* ── 中性色（高级灰，带极轻冷调） ── */
-  --ink: #17181c;
-  --ink-2: #33353d;
+  /* ── 中性色（高级灰，极轻冷调） ── */
+  --ink: #15171c;
+  --ink-2: #34373f;
   --ink-3: #6b7180;
   --ink-4: #9aa0ad;
   --line: #eceef3;
   --line-2: #e2e5ec;
+  --line-strong: #d8dce5;
   --bg-0: #ffffff;
   --bg-1: #f7f8fa;
   --bg-2: #f1f3f7;
+  --bg-hover: #fafbfd;
+
+  /* ── 深色（仅首页 B 方案使用） ── */
   --bg-dark: #0b1020;
-  --bg-dark-2: #131a30;
+  --bg-dark-2: #131a33;
+  --dark-line: rgba(255, 255, 255, 0.14);
+  --dark-ink: rgba(255, 255, 255, 0.72);
+  --dark-ink-2: rgba(255, 255, 255, 0.55);
+  --glass-bg: rgba(255, 255, 255, 0.07);
 
   /* ── 功能色（低饱和，只用于状态） ── */
   --success: #12a56a; --success-bg: #e8f7f0;
   --warning: #e08a1e; --warning-bg: #fdf3e4;
   --danger: #e0455e;  --danger-bg: #fdecef;
-  --error: #e0455e;   /* 与 --danger 同值，只为兼容旧写法 */
+  --error: #e0455e;   /* 与 --danger 同值，兼容旧写法 */
   --info: #6b7180;    --info-bg: #f0f0f2;
 
-  /* ── 圆角（只此 6 档） ── */
-  --r-xs: 6px;
-  --r-sm: 10px;
-  --r-md: 14px;
-  --r-lg: 20px;
-  --r-xl: 28px;
+  /* ── 圆角（只此四档 + 胶囊） ── */
+  --r-xs: 4px;
+  --r-sm: 6px;
+  --r-md: 8px;   /* 控件、卡片、输入框 */
+  --r-lg: 12px;  /* 容器、面板 */
+  --r-xl: 16px;  /* 首屏大容器 */
   --r-pill: 999px;
 
-  /* ── 阴影（极浅、大扩散、低透明） ── */
+  /* ── 阴影：只给首页/浮层用；内页卡片用发丝线，不投影 ── */
   --sh-1: 0 1px 2px rgba(23, 24, 28, 0.04);
   --sh-2: 0 8px 24px rgba(23, 24, 28, 0.05);
   --sh-3: 0 16px 40px rgba(23, 24, 28, 0.07);
-  --sh-brand: 0 8px 22px rgba(65, 95, 255, 0.22);
+  --sh-brand: 0 10px 26px rgba(29, 59, 214, 0.24);
+  --sh-float: 0 10px 30px rgba(16, 24, 48, 0.08);
 
   /* ── 间距（4px 基准） ── */
   --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px;
@@ -52,27 +69,31 @@
   --s-9: 56px; --s-10: 72px; --s-11: 96px; --s-12: 120px;
 
   /* ── 版心与节奏 ── */
-  --wrap: 1200px;
+  --wrap: 1200px;      /* 首页（B）用 1200 十二列 */
+  --wrap-app: 1280px;  /* 内页用同一套通栏：背景铺满、内容居中 1280 */
   --wrap-text: 720px;
   --sec-pad: 96px;
 
-  /* ── 字号阶梯（旧命名，供既有页面引用） ── */
+  /* ── 字号阶梯 ── */
   --font-xs: 12px;
   --font-sm: 13px;
   --font-base: 15px;
   --font-md: 16px;
   --font-lg: 18px;
   --font-xl: 22px;
+  --font-2xl: 30px;
+  --font-hero: 56px;
+  --font-band: 44px; /* 内页页头带标题（方案 3 的大标题） */
 
   /* ── 行高 ── */
-  --lh-tight: 1.25;
+  --lh-tight: 1.2;
   --lh-base: 1.6;
   --lh-loose: 1.8;
 
-  /* ── 兼容旧变量（既有页面过渡用，逐步替换为上面的新名） ── */
+  /* ── 兼容旧变量（既有页面逐步替换为上面的新名） ── */
   --accent: var(--brand);
-  --accent2: #5c7cff;
-  --accent-light: #7a94ff;
+  --accent2: #4f7cff;
+  --accent-light: #6f92ff;
   --text-primary: var(--ink);
   --text-secondary: var(--ink-3);
   --text-disabled: var(--ink-4);
@@ -82,8 +103,8 @@
   --divider: var(--line);
   --soft: var(--bg-1);
   --radius-sm: var(--r-sm);
-  --radius: var(--r-lg);
-  --radius-lg: var(--r-xl);
+  --radius: var(--r-md);
+  --radius-lg: var(--r-lg);
   --shadow-sm: var(--sh-1);
   --shadow: var(--sh-2);
   --shadow-lg: var(--sh-3);
@@ -94,19 +115,20 @@
   --space-lg: 24px;
   --space-xl: 32px;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --header-h: 68px; /* 顶栏高度：组件与首页深色带都用它对齐 */
 
   /* ── Element Plus 主题对齐 ──
-     light-N 语义：N 越大越浅（与白混色的比例 = N×10%），别写反。
+     light-N 语义：N 越大越浅（与白混色比例 = N×10%），别写反。
      light-3 = 30% 白，light-9 = 90% 白；dark-2 = 主色压暗 20%。 */
-  --el-color-primary: #415fff;
-  --el-color-primary-light-3: #7a8fff;
-  --el-color-primary-light-5: #a0afff;
-  --el-color-primary-light-7: #c6cfff;
-  --el-color-primary-light-8: #d9dfff;
-  --el-color-primary-light-9: #ecefff;
-  --el-color-primary-dark-2: #344ccc;
+  --el-color-primary: #1d3bd6;
+  --el-color-primary-light-3: #6176e2;
+  --el-color-primary-light-5: #8e9deb;
+  --el-color-primary-light-7: #bbc4f3;
+  --el-color-primary-light-8: #d2d8f7;
+  --el-color-primary-light-9: #e8ebfb;
+  --el-color-primary-dark-2: #172fab;
 
-  /* 功能色同样要覆盖，否则 EP 默认的 #67c23a/#f56c6c 会和门户状态色同屏打架 */
+  /* 功能色同样覆盖，否则 EP 默认 #67c23a/#f56c6c 会和门户状态色同屏打架 */
   --el-color-success: #12a56a;
   --el-color-success-light-3: #59c097;
   --el-color-success-light-5: #88d2b4;
@@ -159,7 +181,7 @@
   --el-fill-color-light: var(--bg-1);
   --el-bg-color: var(--bg-0);
   --el-bg-color-page: var(--bg-1);
-  --el-border-radius-base: 10px;
+  --el-border-radius-base: 8px;
 }
 
 /* ============================================================
@@ -170,13 +192,13 @@
    JS 侧判断形态请用 utils/breakpoint.js 的 useIsMobile()
    ============================================================ */
 @media (max-width: 1000px) {
-  :root { --sec-pad: 64px; }
+  :root { --sec-pad: 64px; --font-hero: 44px; --font-band: 38px; }
 }
 @media (max-width: 768px) {
-  :root { --sec-pad: 56px; }
+  :root { --sec-pad: 56px; --font-hero: 34px; --header-h: 56px; --font-band: 30px; }
 }
 @media (max-width: 560px) {
-  :root { --sec-pad: 48px; }
+  :root { --sec-pad: 48px; --font-hero: 30px; --font-band: 28px; }
 }
 
 /* ── reset ── */
@@ -212,6 +234,87 @@ a {
 :focus-visible {
   outline: 2px solid var(--brand);
   outline-offset: 2px;
+}
+
+/* ============================================================
+   A 方案通用件（内页统一语汇，页面直接复用，别再各写一份）
+   ============================================================ */
+
+/* 发丝线容器：内页唯一允许的"卡片"形态（不投影） */
+.surface {
+  background: var(--bg-0);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+}
+
+/* 分节标题（A）：主标题 + 右侧说明 */
+.sec-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-4);
+  margin-bottom: var(--s-5);
+}
+.sec-title h2 {
+  font-size: var(--font-2xl);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+.sec-title small {
+  font-size: var(--font-sm);
+  color: var(--ink-3);
+}
+
+/* 大数字（金额、指标）：等宽 + 紧字距 */
+.figure {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  font-weight: 600;
+}
+
+/* ── 表格统一为"发丝行 + 小号字距表头"（全站，含 el-table） ── */
+.el-table {
+  --el-table-border-color: var(--line);
+  --el-table-header-text-color: var(--ink-3);
+  --el-table-text-color: var(--ink-2);
+  --el-table-row-hover-bg-color: var(--bg-hover);
+  font-variant-numeric: tabular-nums;
+}
+.el-table th.el-table__cell {
+  font-size: var(--font-xs);
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  background: transparent;
+}
+.el-table td.el-table__cell {
+  font-size: 14px;
+  padding: 16px 0;
+}
+.el-table::before,
+.el-table__inner-wrapper::before {
+  display: none; /* 去掉 EP 默认的底部粗线，只用行发丝线 */
+}
+/* 分页器：紧凑、等宽数字 */
+.el-pagination {
+  --el-pagination-font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 400;
+}
+.el-pagination.is-background .el-pager li,
+.el-pagination.is-background .btn-prev,
+.el-pagination.is-background .btn-next {
+  border-radius: var(--r-sm);
+}
+/* 下拉/弹窗/抽屉统一圆角与发丝线 */
+.el-dialog,
+.el-drawer,
+.el-message-box,
+.el-popper.is-light {
+  border-radius: var(--r-lg);
+}
+.el-dialog {
+  border: 1px solid var(--line);
 }
 
 /* ============================================================
