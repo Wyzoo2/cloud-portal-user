@@ -118,7 +118,7 @@ export default {
   padding: 24px;
   background:
     radial-gradient(800px 420px at 85% -10%, rgba(51, 214, 255, 0.16), transparent),
-    radial-gradient(700px 420px at 0% 0%, rgba(65, 95, 255, 0.3), transparent),
+    radial-gradient(700px 420px at 0% 0%, rgba(29, 59, 214, 0.34), transparent),
     var(--bg-dark);
 }
 .auth-panel {
@@ -127,9 +127,9 @@ export default {
   width: 100%;
   max-width: 880px;
   background: var(--bg-0);
+  border: 1px solid var(--line);
   border-radius: var(--r-xl);
   overflow: hidden;
-  box-shadow: var(--sh-3);
 }
 .brand-side {
   padding: 52px 44px;
@@ -152,12 +152,11 @@ export default {
 .brand-logo .mark {
   width: 34px;
   height: 34px;
-  border-radius: 10px;
-  background: var(--brand);
+  border-radius: var(--r-md);
+  background: var(--accent-gradient);
   display: grid;
   place-items: center;
   color: #fff;
-  box-shadow: var(--sh-brand);
 }
 .brand-side h2 {
   font-size: 30px;

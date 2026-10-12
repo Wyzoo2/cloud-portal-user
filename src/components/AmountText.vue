@@ -40,9 +40,10 @@ export default {
 .sign {
   margin-right: 1px;
 }
+/* A 方案：关键数字用墨色 + 字重强调，主色留给 CTA / 激活态 / 链接 */
 .strong {
   font-weight: 600;
-  color: var(--brand);
+  color: var(--ink);
 }
 .lg {
   font-size: 22px;

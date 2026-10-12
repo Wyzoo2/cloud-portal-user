@@ -11,11 +11,10 @@ import RegisterView from '../views/RegisterView.vue'
 import HomeView from '../views/HomeView.vue'
 import ProductsView from '../views/ProductsView.vue'
 import OrdersView from '../views/OrdersView.vue'
-import WalletView from '../views/WalletView.vue'
+import AccountView from '../views/AccountView.vue'
 import TransactionsView from '../views/TransactionsView.vue'
 import RechargeView from '../views/RechargeView.vue'
 import RechargesView from '../views/RechargesView.vue'
-import ProfileView from '../views/ProfileView.vue'
 import OrderDetailView from '../views/OrderDetailView.vue'
 
 export const router = createRouter({
@@ -28,16 +27,20 @@ export const router = createRouter({
       component: AppLayout,
       children: [
         { path: '', name: 'home', component: HomeView, meta: { public: true } },
+        // 以下页面都用「深色页头带 + 通栏分节」的首页格式（meta.darkHero 让顶栏透明压在深色带上）
         // 商品页游客可看（产品策略：不登录也能逛，点购买才要登录）
-        { path: 'products', name: 'products', component: ProductsView, meta: { public: true, title: '商品' } },
-        { path: 'orders', name: 'orders', component: OrdersView, meta: { title: '我的订单' } },
+        { path: 'products', name: 'products', component: ProductsView, meta: { public: true, title: '商品', darkHero: true } },
+        { path: 'orders', name: 'orders', component: OrdersView, meta: { title: '我的订单', darkHero: true } },
         // 订单详情（板块 D）：C2 下单成功后也跳这里，只传 order_id
-        { path: 'orders/:id', name: 'order-detail', component: OrderDetailView, meta: { title: '订单详情' } },
-        { path: 'wallet', name: 'wallet', component: WalletView },
-        { path: 'wallet/transactions', name: 'transactions', component: TransactionsView },
-        { path: 'wallet/recharge', name: 'recharge', component: RechargeView },
-        { path: 'wallet/recharges', name: 'recharges', component: RechargesView },
-        { path: 'profile', name: 'profile', component: ProfileView }
+        { path: 'orders/:id', name: 'order-detail', component: OrderDetailView, meta: { title: '订单详情', darkHero: true } },
+        // 账户中心：钱包与「我的」已合并成一页
+        { path: 'account', name: 'account', component: AccountView, meta: { title: '账户', darkHero: true } },
+        // 老链接不失效：/wallet 与 /profile 一律回账户中心
+        { path: 'wallet', redirect: '/account' },
+        { path: 'profile', redirect: '/account' },
+        { path: 'wallet/transactions', name: 'transactions', component: TransactionsView, meta: { title: '消费流水', darkHero: true } },
+        { path: 'wallet/recharge', name: 'recharge', component: RechargeView, meta: { title: '充值申请', darkHero: true } },
+        { path: 'wallet/recharges', name: 'recharges', component: RechargesView, meta: { title: '充值记录', darkHero: true } }
       ]
     },
     { path: '/:pathMatch(.*)*', redirect: '/' }

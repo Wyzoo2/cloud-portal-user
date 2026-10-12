@@ -1,153 +1,195 @@
 <template>
   <div class="home">
-    <!-- Hero：深色首屏 + 光晕 -->
-    <section class="hero">
-      <div class="hero-grid">
-        <!-- 左栏文字 -->
-        <div class="hero-text" v-reveal>
-          <div class="hero-kicker">CLOUD PORTAL</div>
-          <h1>一个平台，租遍<br /><span class="grad">云存储 · 云手机 · 云电脑</span></h1>
-          <p class="hero-sub">统一账号、统一钱包，资源即开即用</p>
-          <div class="hero-tags">
-            <span>秒级开通</span>
-            <span>一个钱包</span>
-            <span>安全隔离</span>
-            <span>7×24 运维</span>
-          </div>
+    <!-- ════════ 首屏深色带（B 方案）：页头透明压在上面 ════════ -->
+    <section class="hero-band">
+      <div class="hero-grid" aria-hidden="true"></div>
+      <div class="wrap hero">
+        <div class="hero-copy">
+          <span class="eyebrow">CLOUD PORTAL · 统一账号 · 统一钱包</span>
+          <h1>
+            三条产品线，<br />
+            <em>一份余额</em>，一次结清。
+          </h1>
+          <p>
+            云存储、云手机、云电脑共用同一个账号与钱包。下单即开通、开通失败自动退款，
+            每一笔消费都有流水可查。
+          </p>
           <div class="hero-cta">
-            <button class="btn-hero primary" @click="$router.push(isLoggedIn ? '/products' : '/register')">
-              {{ isLoggedIn ? '浏览商品' : '立即开始' }}
+            <button class="btn-primary" @click="$router.push('/products')">立即选购</button>
+            <button class="btn-ghost" @click="$router.push(isLoggedIn ? '/wallet/transactions' : '/register')">
+              查看消费流水
             </button>
-            <button class="btn-hero ghost" @click="$router.push('/products')">了解产品</button>
           </div>
+          <ul class="hero-tags">
+            <li>秒级开通</li>
+            <li>一个钱包</li>
+            <li>失败自动退款</li>
+          </ul>
         </div>
 
-        <!-- 右栏玻璃数据卡 -->
-        <div class="hero-card">
-          <h4>实时资源看板 <span class="demo-tag">示例</span></h4>
-          <div class="hc-row" v-for="r in panel" :key="r.name">
-            <div class="hc-l">
-              <span class="ic">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
-                  stroke-linecap="round" stroke-linejoin="round" v-html="r.path"></svg>
-              </span>
-              <div><b>{{ r.name }}</b><small>{{ r.small }}</small></div>
+        <!-- 玻璃卡：已登录展示真实余额，游客展示统一钱包说明（不编数据） -->
+        <aside class="glass" v-reveal>
+          <template v-if="isLoggedIn">
+            <div class="glass-label">账户余额</div>
+            <div class="glass-amount"><AmountText :cents="balanceCents" /></div>
+            <div class="glass-rows">
+              <div><span>钱包状态</span><b :class="{ danger: isFrozen }">{{ isFrozen ? '已冻结' : '正常' }}</b></div>
+              <div><span>可用产品线</span><b>3 条</b></div>
             </div>
-            <span class="hc-num">{{ r.num }} <em>{{ r.unit }}</em></span>
-          </div>
-        </div>
+            <button class="glass-btn" @click="$router.push('/wallet')">进入钱包</button>
+          </template>
+          <template v-else>
+            <div class="glass-label">统一钱包</div>
+            <div class="glass-amount">一个账号<br />一份余额</div>
+            <div class="glass-rows">
+              <div><span>云存储</span><b>对象存储 / 文件备份</b></div>
+              <div><span>云手机</span><b>云端安卓实例</b></div>
+              <div><span>云电脑</span><b>Windows / Linux 桌面</b></div>
+            </div>
+            <button class="glass-btn" @click="$router.push('/register')">注册并开通钱包</button>
+          </template>
+        </aside>
       </div>
     </section>
 
-    <!-- 统计条（浮起白卡） -->
-    <div class="stats">
-      <div class="stats-card" v-reveal>
-        <div class="stat" v-for="s in stats" :key="s.t">
-          <b>{{ s.v }}</b><small>{{ s.t }}</small>
-        </div>
+    <!-- ════════ 关键指标（压在深浅交界） ════════ -->
+    <div class="wrap kpis">
+      <div v-for="(k, i) in kpis" :key="k.label" class="kpi" v-reveal="{ delay: i * 60 }">
+        <b class="figure">{{ k.value }}</b>
+        <span>{{ k.label }}</span>
       </div>
     </div>
 
-    <!-- 产品线 -->
-    <section class="section">
-      <div class="sec-head" v-reveal>
-        <div class="kicker">PRODUCTS</div>
+    <!-- ════════ 产品与服务 ════════ -->
+    <section class="wrap sec">
+      <header class="sec-head" v-reveal>
+        <div class="tag">Products</div>
         <h2>产品与服务</h2>
-        <p>三条产品线，一站租齐</p>
-      </div>
-      <div class="prod-grid">
-        <div class="prod-card" v-for="(p, i) in lines" :key="p.code" v-reveal="{ delay: i * 100 }"
-          @click="$router.push('/products')">
-          <div class="prod-visual">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
-              stroke-linecap="round" stroke-linejoin="round" v-html="p.path"></svg>
-          </div>
+        <p>三条产品线一站租齐，规格与价格实时同步自各产品，下单时按实时价重算</p>
+      </header>
+      <div class="cards">
+        <article v-for="(p, i) in lines" :key="p.code" class="pcard" v-reveal="{ delay: i * 80 }">
+          <span class="picon" v-html="p.icon"></span>
           <h3>{{ p.name }}</h3>
-          <p class="desc">{{ p.desc }}</p>
-          <span class="go">了解更多<i class="go-arrow">→</i></span>
-        </div>
+          <p class="pdesc">{{ p.desc }}</p>
+          <ul class="plist">
+            <li v-for="f in p.feats" :key="f">{{ f }}</li>
+          </ul>
+          <button class="plink" @click="$router.push(`/products?product_code=${p.code}`)">
+            查看规格与价格
+          </button>
+        </article>
       </div>
     </section>
 
-    <!-- 为什么选择（深色收口） -->
-    <section class="section">
-      <div class="why">
-        <div class="why-head" v-reveal>
-          <h2>把复杂留给平台<br />把简单交给客户</h2>
-        </div>
-        <div class="why-grid">
-          <div class="why-it" v-for="(f, i) in feats" :key="f.t" v-reveal="{ delay: i * 100 }">
-            <div class="w-ic">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
-                stroke-linecap="round" stroke-linejoin="round" v-html="f.path"></svg>
-            </div>
-            <h4>{{ f.t }}</h4>
+    <!-- ════════ 充值流程（线下转账 + 人工核销，必须讲清） ════════ -->
+    <section class="wrap sec">
+      <header class="sec-head" v-reveal>
+        <div class="tag">Recharge</div>
+        <h2>充值不是即时到账</h2>
+        <p>平台不走在线支付：提交申请后请线下转账，管理员核对到账后余额自动入账</p>
+      </header>
+      <ol class="steps">
+        <li v-for="(s, i) in steps" :key="s.t" v-reveal="{ delay: i * 70 }">
+          <span class="step-no figure">{{ String(i + 1).padStart(2, '0') }}</span>
+          <b>{{ s.t }}</b>
+          <small>{{ s.d }}</small>
+        </li>
+      </ol>
+    </section>
+
+    <!-- ════════ 深色能力带 ════════ -->
+    <section class="dark-band">
+      <div class="wrap">
+        <h2>把复杂留给平台，把简单交给客户</h2>
+        <div class="feats">
+          <div v-for="(f, i) in feats" :key="f.t" class="feat" v-reveal="{ delay: i * 70 }">
+            <span class="ficon" v-html="f.icon"></span>
+            <b>{{ f.t }}</b>
             <p>{{ f.d }}</p>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- CTA -->
-    <section class="section cta-section">
-      <div class="cta" v-reveal>
-        <h3>准备好开始了吗？</h3>
-        <p>注册即享一个钱包，畅享三条产品线</p>
-        <button class="btn-hero primary" @click="$router.push(isLoggedIn ? '/products' : '/register')">
-          {{ isLoggedIn ? '浏览商品' : '免费注册' }}
-        </button>
-      </div>
-    </section>
+    <!-- ════════ 收尾：深色收尾带 + 页脚（与内页共用同一个组件） ════════ -->
+    <SiteFooter
+      :statement="isLoggedIn ? '账户已就绪，随时可以开通云存储 / 云手机 / 云电脑。' : '注册即拥有一个钱包，云存储 / 云手机 / 云电脑随时开通。'"
+      :action-text="isLoggedIn ? '去选购' : '免费注册'"
+      :action-to="isLoggedIn ? '/products' : '/register'"
+    />
   </div>
 </template>
 
 <script>
 import { mapState } from 'pinia'
 import { useUserStore } from '../store'
+import AmountText from '../components/AmountText.vue'
+import SiteFooter from '../components/SiteFooter.vue'
 
 const ICONS = {
-  storage: '<path d="M22 12H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><path d="M6 16h.01"/><path d="M10 16h.01"/>',
-  phone: '<rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/>',
-  desktop: '<rect width="20" height="14" x="2" y="3" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/>',
-  layers: '<path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/>',
-  zap: '<path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/>',
-  shield: '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>'
+  storage: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5-9 4.5-9-4.5Z"/><path d="M3 12.5 12 17l9-4.5"/><path d="M3 16.5 12 21l9-4.5"/></svg>',
+  phone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M11 18.5h2"/></svg>',
+  desktop: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4" width="19" height="12.5" rx="2"/><path d="M9 20h6M12 16.5V20"/></svg>',
+  plug: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v6"/><path d="M5 8h14v4a7 7 0 0 1-14 0Z"/><path d="M12 19v3"/></svg>',
+  shield: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4.2-2.9 7.6-7 9-4.1-1.4-7-4.8-7-9V6l7-3Z"/><path d="m9 12 2 2 4-4"/></svg>',
+  wallet: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7.5A2.5 2.5 0 0 1 5.5 5H18v3"/><path d="M3 7.5V17a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3.5"/><path d="M21 9.5h-4.5a2 2 0 0 0 0 4H21Z"/></svg>'
 }
-
-const LINES = [
-  { code: 'storage', name: '云存储', path: ICONS.storage, desc: '对象存储 / 云硬盘 / 企业网盘，海量数据安全存。' },
-  { code: 'phone', name: '云手机', path: ICONS.phone, desc: '云端安卓实例，多开群控、ADB 调试，即开即用。' },
-  { code: 'desktop', name: '云电脑', path: ICONS.desktop, desc: 'Windows / Linux 云桌面，安全办公、开发上云。' }
-]
-
-const FEATS = [
-  { path: ICONS.layers, t: '一站齐租', d: '三条产品线一个账号一个钱包，交叉组合满足完整业务链路。' },
-  { path: ICONS.zap, t: '秒级交付', d: '资源在线即开即用，弹性伸缩，业务快速上线。' },
-  { path: ICONS.shield, t: '安全合规', d: '多租户隔离、数据加密、操作审计，等保合规。' }
-]
-
-const PANEL = [
-  { name: '云手机', small: '在线实例', num: '3,860', unit: '台', path: ICONS.phone },
-  { name: '云电脑', small: '在线桌面', num: '1,240', unit: '台', path: ICONS.desktop },
-  { name: '云存储', small: '已分配容量', num: '1.62', unit: 'PB', path: ICONS.storage }
-]
-
-const STATS = [
-  { v: '3 大', t: '产品线' },
-  { v: '1 个', t: '统一钱包' },
-  { v: '99.95%', t: '平台可用性' },
-  { v: '秒级', t: '资源开通' }
-]
 
 export default {
   name: 'HomeView',
+  components: { AmountText, SiteFooter },
   data() {
-    return { lines: LINES, feats: FEATS, panel: PANEL, stats: STATS }
+    return {
+      kpis: [
+        { value: '3', label: '产品线统一接入' },
+        { value: '1', label: '账号与钱包' },
+        { value: '15s', label: '下单到可用（典型）' },
+        { value: '7×24', label: '实例在线运行' }
+      ],
+      lines: [
+        {
+          code: 'storage',
+          name: '云存储',
+          icon: ICONS.storage,
+          desc: '对象存储与文件备份，容量按需购买，适合数据留存与共享。',
+          feats: ['容量与地域按规格选择', '下单后实例与到期时间可见', '开通失败自动退款']
+        },
+        {
+          code: 'phone',
+          name: '云手机',
+          icon: ICONS.phone,
+          desc: '云端安卓实例，多开群控、调试即开即用，不占用本地设备。',
+          feats: ['标准版 2 核 2G 起', '单项最多购买 3 台', '独立 IP']
+        },
+        {
+          code: 'desktop',
+          name: '云电脑',
+          icon: ICONS.desktop,
+          desc: 'Windows / Linux 云桌面，办公与开发环境开箱可用。',
+          feats: ['办公型 4 核 8G 起', '系统盘随实例分配', '包周期或按量计费']
+        }
+      ],
+      steps: [
+        { t: '提交申请', d: '在钱包页填写充值金额并提交' },
+        { t: '线下转账', d: '按平台提供的账户完成转账' },
+        { t: '管理员核销', d: '平台人工核对到账金额与备注' },
+        { t: '余额到账', d: '核销通过后余额自动入账并生成流水' }
+      ],
+      feats: [
+        { t: '一站租齐', d: '三条产品线一个账号一个钱包，交叉组合满足完整业务链路。', icon: ICONS.wallet },
+        { t: '秒级交付', d: '资源在线下单即开通，开通进度与结果在订单详情里按项展示。', icon: ICONS.plug },
+        { t: '安全合规', d: '多租户隔离、数据加密、操作审计，账户与钱包状态全程可查。', icon: ICONS.shield }
+      ]
+    }
   },
   computed: {
-    ...mapState(useUserStore, ['user']),
+    ...mapState(useUserStore, ['user', 'balance', 'isFrozen']),
     isLoggedIn() {
       return !!this.user
+    },
+    balanceCents() {
+      return this.balance ? this.balance.balance_cents : null
     }
   }
 }
@@ -155,460 +197,465 @@ export default {
 
 <style scoped>
 .home {
-  display: flex;
-  flex-direction: column;
+  display: block;
 }
 
-/* ===== Hero：深色 + 光晕 ===== */
-.hero {
-  margin: calc(-1 * var(--s-6)) calc(50% - 50vw) 0;
-  padding: 96px 24px 120px;
-  background:
-    radial-gradient(1100px 520px at 78% -12%, rgba(65, 95, 255, 0.3), transparent),
-    radial-gradient(800px 420px at 6% 0%, rgba(51, 214, 255, 0.16), transparent),
-    var(--bg-dark);
+/* ════════ 深色带 ════════ */
+.hero-band {
+  position: relative;
+  overflow: hidden;
+  background: var(--bg-dark);
+  /* 上移一个页头高度，让深色带钻到透明页头下面 */
+  margin-top: calc(var(--header-h) * -1);
+  padding-top: calc(var(--header-h) + 64px);
+  padding-bottom: 96px;
   color: #fff;
+}
+/* 品牌光晕 + 细网格，制造"大气"的深色质感 */
+.hero-band::after {
+  content: "";
+  position: absolute;
+  width: 1000px;
+  height: 560px;
+  right: -160px;
+  top: -240px;
+  background: radial-gradient(closest-side, rgba(29, 59, 214, 0.55), transparent 70%);
+  pointer-events: none;
 }
 .hero-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: radial-gradient(120% 90% at 70% 0%, #000 30%, transparent 75%);
+  -webkit-mask-image: radial-gradient(120% 90% at 70% 0%, #000 30%, transparent 75%);
+  pointer-events: none;
+}
+.wrap {
+  width: 100%;
   max-width: var(--wrap);
   margin: 0 auto;
+  padding: 0 32px;
+  position: relative;
+  z-index: 2;
+}
+.hero {
   display: grid;
-  grid-template-columns: 1.1fr 0.9fr;
-  gap: 48px;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 56px;
   align-items: center;
 }
-.hero-kicker {
-  display: inline-block;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  color: var(--brand-weak);
-  padding: 5px 14px;
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+  padding: 0 14px;
   border-radius: var(--r-pill);
-  margin-bottom: 20px;
+  background: var(--glass-bg);
+  border: 1px solid var(--dark-line);
+  font-size: var(--font-xs);
+  letter-spacing: 0.1em;
+  color: #c9d3ff;
 }
 .hero h1 {
-  font-size: clamp(34px, 4.6vw, 56px);
-  line-height: 1.15;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  margin: 0 0 18px;
-  color: #fff;
+  margin: 22px 0 0;
+  font-size: var(--font-hero);
+  line-height: 1.12;
+  letter-spacing: -0.03em;
+  font-weight: 600;
+  text-wrap: balance; /* 关键词不被折断 */
 }
-.hero h1 .grad {
-  background: var(--accent-gradient);
+.hero h1 em {
+  font-style: normal;
+  background: var(--accent-gradient-soft);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
-.hero-sub {
-  font-size: 16px;
-  color: rgba(255, 255, 255, 0.66);
-  margin: 0 0 24px;
-  max-width: 360px;
-}
-.hero-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 30px;
-}
-.hero-tags span {
-  font-size: 13px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  padding: 6px 14px;
-  border-radius: var(--r-pill);
-  color: rgba(255, 255, 255, 0.85);
+.hero p {
+  margin-top: 20px;
+  max-width: 520px;
+  font-size: var(--font-md);
+  line-height: 1.8;
+  color: var(--dark-ink);
 }
 .hero-cta {
+  margin-top: 34px;
   display: flex;
   gap: 14px;
+  flex-wrap: wrap;
 }
-.btn-hero {
+.btn-primary {
+  height: 48px;
+  padding: 0 26px;
   border: 0;
-  cursor: pointer;
-  font-weight: 600;
-  border-radius: var(--r-pill);
-  padding: 14px 30px;
-  font-size: 16px;
-  transition: 0.22s cubic-bezier(0.22, 0.61, 0.36, 1);
+  border-radius: var(--r-md);
+  background: var(--brand);
+  color: #fff;
   font-family: inherit;
-}
-.btn-hero.primary {
-  background: var(--accent-gradient);
-  color: #fff;
-  box-shadow: var(--sh-brand);
-}
-.btn-hero.primary:hover {
-  transform: translateY(-1px);
-}
-.btn-hero.ghost {
-  background: transparent;
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-}
-.btn-hero.ghost:hover {
-  background: #fff;
-  color: var(--ink);
-  border-color: #fff;
-}
-
-/* 玻璃数据卡 */
-.hero-card {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: var(--r-xl);
-  padding: 24px;
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  animation: float 6s ease-in-out infinite;
-}
-.hero-card h4 {
   font-size: 14px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.6);
-  margin: 0 0 14px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
 }
-.hero-card .demo-tag {
-  font-size: 11px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.55);
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  padding: 1px 8px;
-  border-radius: var(--r-pill);
+.btn-primary:hover {
+  background: var(--brand-hover);
 }
-.hc-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 0;
-  border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
-}
-.hc-row:last-child {
-  border-bottom: 0;
-}
-.hc-l {
-  display: flex;
-  align-items: center;
-}
-.hc-l .ic {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.06);
-  display: grid;
-  place-items: center;
+.btn-ghost {
+  height: 48px;
+  padding: 0 24px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--dark-line);
+  background: transparent;
   color: #fff;
-  margin-right: 12px;
-}
-.hc-l .ic svg {
-  width: 18px;
-  height: 18px;
-}
-.hc-l b {
-  font-size: 15px;
+  font-family: inherit;
+  font-size: 14px;
   font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s;
 }
-.hc-l small {
-  display: block;
-  color: rgba(255, 255, 255, 0.5);
-  font-size: 12px;
+.btn-ghost:hover {
+  border-color: rgba(255, 255, 255, 0.4);
 }
-.hc-num {
-  font-size: 18px;
-  font-weight: 700;
+.hero-tags {
+  margin: 28px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
 }
-.hc-num em {
-  font-style: normal;
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.5);
-  font-weight: 400;
-}
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
+.hero-tags li {
+  font-size: var(--font-xs);
+  color: var(--dark-ink-2);
+  border: 1px solid var(--dark-line);
+  border-radius: var(--r-pill);
+  padding: 4px 12px;
 }
 
-/* ===== 统计条（浮起白卡） ===== */
-.stats {
-  max-width: var(--wrap);
-  margin: -56px auto 0;
-  padding: 0 24px;
-  position: relative;
-  z-index: 5;
+/* 玻璃卡 */
+.glass {
+  background: var(--glass-bg);
+  border: 1px solid var(--dark-line);
+  border-radius: var(--r-xl);
+  padding: 28px;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
 }
-.stats-card {
-  background: var(--bg-0);
-  border-radius: var(--r-lg);
-  box-shadow: var(--sh-2);
+.glass-label {
+  font-size: var(--font-sm);
+  color: var(--dark-ink-2);
+}
+.glass-amount {
+  margin-top: 10px;
+  font-size: 40px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+.glass-rows {
+  margin-top: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  font-size: var(--font-sm);
+  color: var(--dark-ink);
+}
+.glass-rows div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+.glass-rows b {
+  color: #fff;
+  font-weight: 600;
+  text-align: right;
+}
+.glass-rows b.danger {
+  color: #ff8a9b;
+}
+.glass-btn {
+  margin-top: 22px;
+  width: 100%;
+  height: 44px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--dark-line);
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.glass-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+/* ════════ KPI（压在深浅交界） ════════ */
+.kpis {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  margin-top: -46px;
 }
-.stat {
-  padding: 26px 24px;
-  text-align: center;
-  border-right: 1px solid var(--line);
-}
-.stat:last-child {
-  border-right: 0;
-}
-.stat b {
-  font-size: 30px;
-  font-weight: 700;
-  color: var(--ink);
-}
-.stat small {
-  display: block;
-  color: var(--ink-3);
-  font-size: 13px;
-  margin-top: 4px;
-}
-
-/* ===== 通用 section ===== */
-.section {
-  padding: var(--sec-pad) 0;
-}
-.sec-head {
-  text-align: center;
-  margin-bottom: 48px;
-}
-.sec-head .kicker {
-  color: var(--brand);
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  font-size: 12px;
-  text-transform: uppercase;
-}
-.sec-head h2 {
-  font-size: clamp(26px, 3vw, 40px);
-  line-height: 1.25;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  margin: 10px 0 12px;
-  color: var(--ink);
-}
-.sec-head p {
-  color: var(--ink-3);
-  font-size: 15px;
-  margin: 0;
-  max-width: var(--wrap-text);
-  margin-left: auto;
-  margin-right: auto;
-}
-
-/* ===== 产品卡片 ===== */
-.prod-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
-}
-.prod-card {
+.kpi {
   background: var(--bg-0);
   border: 1px solid var(--line);
   border-radius: var(--r-lg);
-  padding: 32px 28px;
-  cursor: pointer;
-  transition: 0.22s cubic-bezier(0.22, 0.61, 0.36, 1);
-  box-shadow: var(--sh-1);
-  position: relative;
+  padding: 24px;
+  box-shadow: var(--sh-float);
 }
-.prod-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--sh-3);
-  border-color: var(--line-2);
+.kpi b {
+  display: block;
+  font-size: 28px;
 }
-.prod-visual {
-  width: 100%;
-  aspect-ratio: 16 / 10;
-  background: var(--bg-2);
-  border-radius: var(--r-md);
-  display: grid;
-  place-items: center;
-  color: var(--brand);
-  margin-bottom: 22px;
-}
-.prod-visual svg {
-  width: 44px;
-  height: 44px;
-}
-.prod-card h3 {
-  font-size: 18px;
-  font-weight: 600;
-  margin: 0 0 8px;
-  color: var(--ink);
-}
-.prod-card .desc {
+.kpi span {
+  display: block;
+  margin-top: 6px;
+  font-size: var(--font-sm);
   color: var(--ink-3);
-  font-size: 14px;
-  line-height: 1.7;
-  margin: 0 0 18px;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-.prod-card .go {
-  color: var(--brand);
-  font-weight: 600;
-  font-size: 14px;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-.prod-card .go .go-arrow {
-  font-style: normal;
-  transition: transform 0.22s;
-}
-.prod-card:hover .go-arrow {
-  transform: translateX(4px);
 }
 
-/* ===== 为什么选择（深色收口） ===== */
-.why {
-  background: var(--bg-dark);
-  border-radius: var(--r-xl);
-  padding: 64px;
-  color: #fff;
+/* ════════ 分节（A 语汇：小标签 + 大标题 + 分割线） ════════ */
+.sec {
+  padding: var(--sec-pad) 0;
 }
-.why-head h2 {
-  font-size: 24px;
+/* 相邻两节之间不要叠两份留白 */
+.sec + .sec {
+  padding-top: 32px;
+}
+.sec-head {
+  padding-bottom: 20px;
+  margin-bottom: 32px;
+  border-bottom: 1px solid var(--line);
+}
+.sec-head .tag {
+  font-size: var(--font-xs);
+  letter-spacing: 0.18em;
+  color: var(--brand);
+  text-transform: uppercase;
+}
+.sec-head h2 {
+  margin: 10px 0 0;
+  font-size: var(--font-2xl);
+  letter-spacing: -0.02em;
   font-weight: 600;
-  line-height: 1.4;
-  margin: 0 0 40px;
-  max-width: 420px;
 }
-.why-grid {
+.sec-head p {
+  margin: 10px 0 0;
+  font-size: 14px;
+  color: var(--ink-3);
+}
+
+/* 产品卡：发丝线、无投影（内页语汇），hover 只换边框颜色 */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+.pcard {
+  background: var(--bg-0);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 28px 26px;
+  display: flex;
+  flex-direction: column;
+  transition: border-color 0.2s;
+}
+.pcard:hover {
+  border-color: var(--brand-weak-2);
+}
+.picon {
+  width: 46px;
+  height: 46px;
+  border-radius: var(--r-md);
+  background: var(--brand-weak);
+  color: var(--brand);
+  display: grid;
+  place-items: center;
+}
+.picon :deep(svg) {
+  width: 24px;
+  height: 24px;
+}
+.pcard h3 {
+  margin: 20px 0 0;
+  font-size: var(--font-lg);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.pdesc {
+  margin: 10px 0 0;
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--ink-2);
+}
+.plist {
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.plist li {
+  position: relative;
+  padding-left: 16px;
+  font-size: var(--font-sm);
+  color: var(--ink-3);
+}
+.plist li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 8px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--brand-weak-2);
+}
+.plink {
+  margin-top: auto;
+  padding-top: 22px;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  font-family: inherit;
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--brand);
+  cursor: pointer;
+}
+
+/* 充值流程 */
+.steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+}
+.steps li {
+  background: var(--bg-0);
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.step-no {
+  font-size: 22px;
+  color: #b3c0f2; /* 装饰性序号：比 brand-weak-2 深一档，白底上更清晰 */
+}
+.steps b {
+  font-size: var(--font-base);
+  font-weight: 600;
+}
+.steps small {
+  font-size: var(--font-sm);
+  color: var(--ink-3);
+  line-height: 1.7;
+}
+
+/* ════════ 深色能力带 ════════ */
+.dark-band {
+  background: var(--bg-dark);
+  color: #fff;
+  padding: var(--sec-pad) 0;
+}
+.dark-band h2 {
+  margin: 0 0 40px;
+  font-size: var(--font-2xl);
+  letter-spacing: -0.02em;
+  font-weight: 600;
+}
+.feats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 40px;
 }
-.why-it .w-ic {
-  width: 44px;
-  height: 44px;
+.feat b {
+  display: block;
+  margin-top: 18px;
+  font-size: var(--font-md);
+  font-weight: 600;
+}
+.feat p {
+  margin: 10px 0 0;
+  font-size: var(--font-sm);
+  line-height: 1.8;
+  color: var(--dark-ink);
+}
+.ficon {
+  width: 42px;
+  height: 42px;
   border-radius: var(--r-md);
-  background: rgba(65, 95, 255, 0.18);
-  border: 1px solid rgba(65, 95, 255, 0.4);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--dark-line);
+  color: #b9c6ff;
   display: grid;
   place-items: center;
-  color: #8fb0ff;
-  margin-bottom: 14px;
 }
-.why-it .w-ic svg {
+.ficon :deep(svg) {
   width: 22px;
   height: 22px;
 }
-.why-it h4 {
-  font-size: 17px;
-  font-weight: 600;
-  margin: 0 0 8px;
-  color: #fff;
-}
-.why-it p {
-  color: rgba(255, 255, 255, 0.58);
-  font-size: 14px;
-  line-height: 1.7;
-  margin: 0;
-}
 
-/* ===== CTA ===== */
-.cta-section {
-  padding-bottom: var(--sec-pad);
-}
-.cta {
-  text-align: center;
-  padding: 64px 24px;
-  background: var(--bg-2);
-  border-radius: var(--r-xl);
-}
-.cta h3 {
-  font-size: 26px;
-  font-weight: 600;
-  margin: 0 0 10px;
-  color: var(--ink);
-}
-.cta p {
-  color: var(--ink-3);
-  font-size: 15px;
-  margin: 0 0 26px;
-}
+/* 收尾带与页脚由 SiteFooter 组件提供，这里不再重复实现 */
 
-/* ===== 响应式 ===== */
+/* ── 移动端 ── */
 @media (max-width: 1000px) {
-  .hero-grid {
+  .hero {
     grid-template-columns: 1fr;
-    gap: 32px;
+    gap: 40px;
   }
-  .prod-grid {
+  .kpis,
+  .cards,
+  .steps,
+  .feats {
     grid-template-columns: repeat(2, 1fr);
   }
-  .why-grid {
-    grid-template-columns: 1fr;
+  .feats {
     gap: 28px;
   }
-  .stats-card {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .stat:nth-child(2) {
-    border-right: 0;
-  }
 }
-@media (max-width: 560px) {
-  .hero {
-    padding: 48px 16px 88px;
+@media (max-width: 768px) {
+  .hero-band {
+    padding-top: calc(var(--header-h) + 40px);
+    padding-bottom: 72px;
   }
-  .hero h1 {
-    font-size: 30px;
+  .wrap {
+    padding: 0 20px;
   }
-  .hero-sub {
-    font-size: 15px;
-    margin-bottom: 20px;
+  .kpis {
+    margin-top: -32px;
+    gap: 12px;
   }
-  .hero-tags {
-    margin-bottom: 24px;
+  .kpi {
+    padding: 18px;
   }
-  /* 按钮并排平分宽度，避免两个全宽按钮堆叠占屏 */
-  .hero-cta {
-    gap: 10px;
+  .kpi b {
+    font-size: 22px;
   }
-  .btn-hero {
-    flex: 1;
-    padding: 13px 12px;
-    font-size: 15px;
-  }
-  .prod-grid {
+  .cards,
+  .steps,
+  .feats {
     grid-template-columns: 1fr;
   }
-  .why {
-    padding: 32px 24px;
+  .glass {
+    padding: 22px;
   }
-  /* 统计条 2×2，比 4 行 1 列紧凑 */
-  .stats-card {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .stat {
-    padding: 18px 14px;
-    border-right: 1px solid var(--line);
-    border-bottom: 1px solid var(--line);
-  }
-  .stat:nth-child(2n) {
-    border-right: 0;
-  }
-  .stat:nth-last-child(-n + 2) {
-    border-bottom: 0;
-  }
-  .stat b {
-    font-size: 24px;
-  }
-  .cta {
-    padding: 40px 20px;
-  }
-  .cta h3 {
-    font-size: 22px;
+  .glass-amount {
+    font-size: 32px;
   }
 }
 </style>

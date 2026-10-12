@@ -1,15 +1,34 @@
 <template>
   <div class="order-detail">
-    <!-- 首次加载骨架 -->
-    <LoadingBox v-if="loading && !order" :loading="loading" :rows="5" />
+    <!-- 页头带：订单号作为标题，右侧给应付与状态 -->
+    <PageBand
+      :crumb="[{ text: '首页', to: '/' }, { text: '我的订单', to: '/orders' }, { text: '订单详情' }]"
+      :title="order ? order.order_no || '订单详情' : '订单详情'"
+      desc="按项展示开通结果：成功项给出实例与到期时间，失败项给出原因与退款单号。"
+    >
+      <template #side>
+        <div class="band-stat">
+          <b class="figure">{{ order ? formatCents(dueCents) : '—' }}</b>
+          <span>应付金额</span>
+        </div>
+        <div class="band-stat">
+          <b class="figure">{{ statusWord }}</b>
+          <span>订单状态</span>
+        </div>
+      </template>
+    </PageBand>
 
-    <!-- 错误态：4001 统一为「订单不存在或无权查看」（后端有意不区分他人订单） -->
-    <EmptyState v-else-if="loadError" :description="loadError">
-      <el-button type="primary" @click="$router.push('/orders')">返回订单列表</el-button>
-      <el-button @click="load">重新加载</el-button>
-    </EmptyState>
+    <div class="body">
+      <!-- 首次加载骨架 -->
+      <LoadingBox v-if="loading && !order" :loading="loading" :rows="5" />
 
-    <template v-else-if="order">
+      <!-- 错误态：4001 统一为「订单不存在或无权查看」（后端有意不区分他人订单） -->
+      <EmptyState v-else-if="loadError" :description="loadError">
+        <el-button type="primary" @click="$router.push('/orders')">返回订单列表</el-button>
+        <el-button @click="load">重新加载</el-button>
+      </EmptyState>
+
+      <template v-else-if="order">
       <!-- 订单头：状态 + 金额 + 关键时间 -->
       <div class="head-card">
         <div class="head-top">
@@ -77,9 +96,16 @@
           </div>
 
           <div class="item-body">
+            <!-- ⚠️ 后端语义：订单项的 price_cents 是「该项小计」（已含数量），不是单价。
+                 实测样例：quantity=2 且 price_cents=20000 时 order.total_cents 也是 20000。
+                 所以这里只展示数量与小计，绝不能再用 price_cents × quantity。 -->
             <div class="kv">
-              <span>单价 × 数量</span>
-              <b><AmountText :cents="it.price_cents" /> × {{ it.quantity }}</b>
+              <span>数量</span>
+              <b>×{{ it.quantity }}</b>
+            </div>
+            <div class="kv">
+              <span>小计</span>
+              <b><AmountText :cents="it.price_cents" strong /></b>
             </div>
 
             <!-- 2 开通成功：实例与到期时间 -->
@@ -134,7 +160,14 @@
           {{ isFrozen ? '钱包已冻结' : '立即支付' }}
         </el-button>
       </div>
-    </template>
+      </template>
+    </div>
+
+    <SiteFooter
+      statement="开通成功后即可在产品前端使用实例；失败项已自动退款。"
+      action-text="返回订单列表"
+      action-to="/orders"
+    />
   </div>
 </template>
 
@@ -144,9 +177,9 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { api } from '../api'
 import { useUserStore } from '../store'
 import { formatCents, formatTime } from '../utils/format'
-import { failReasonText, productLineName } from '../utils/constants'
+import { failReasonText, productLineName, ORDER_STATUS } from '../utils/constants'
 import { errorList, errorText } from '../utils/errors'
-import { AmountText, StatusTag, EmptyState, LoadingBox } from '../components'
+import { AmountText, StatusTag, EmptyState, LoadingBox, PageBand, SiteFooter } from '../components'
 
 // 轮询规程（后端答复 §2 D-Q6）：1.5s 一次、最长 60s；详情接口不限流
 const POLL_INTERVAL = 1500
@@ -156,7 +189,7 @@ const ITEM_SETTLED = [2, 3, 4]
 
 export default {
   name: 'OrderDetailView',
-  components: { AmountText, StatusTag, EmptyState, LoadingBox },
+  components: { AmountText, StatusTag, EmptyState, LoadingBox, PageBand, SiteFooter },
   data() {
     return {
       order: null,
@@ -175,6 +208,12 @@ export default {
     items() {
       return (this.order && this.order.items) || []
     },
+    /** 页头带右侧：订单状态中文（深色底上只放一个字词） */
+    statusWord() {
+      if (!this.order) return '—'
+      const hit = ORDER_STATUS[Number(this.order.status)]
+      return hit ? hit.text : '—'
+    },
     /** 判"处理中"看订单项：受理那一刻订单 status 就已经是 1 */
     processing() {
       return this.items.some(it => Number(it.status) === 1)
@@ -185,11 +224,12 @@ export default {
     failCount() {
       return this.items.filter(it => [3, 4].includes(Number(it.status))).length
     },
-    /** 应付金额 = 所有待支付项的小计之和（整数分相加，无浮点） */
+    /** 应付金额 = 所有待支付项的「小计」之和
+     *  ⚠️ price_cents 已经是该项小计（含数量），不要再乘 quantity */
     dueCents() {
       return this.items
         .filter(it => Number(it.status) === 0)
-        .reduce((sum, it) => sum + Number(it.price_cents || 0) * Number(it.quantity || 1), 0)
+        .reduce((sum, it) => sum + Number(it.price_cents || 0), 0)
     },
     timeline() {
       const items = this.items
@@ -228,6 +268,7 @@ export default {
   methods: {
     ...mapActions(useUserStore, ['refreshBalance']),
     formatTime,
+    formatCents,
     productLineName,
     failReasonText,
     /** 订单项状态 → 左侧色条（5 态各一套视觉，取值同 StatusTag） */
@@ -413,11 +454,34 @@ export default {
 </script>
 
 <style scoped>
-.order-detail {
+/* 通栏内容区（首页格式）：背景铺满屏幕，内容居中（详情页窄一点更好读） */
+.body {
   display: flex;
   flex-direction: column;
   gap: var(--s-4);
-  max-width: 720px;
+  background: var(--bg-1);
+  padding: var(--s-7) var(--s-6) var(--s-11);
+}
+.body > * {
+  width: 100%;
+  max-width: 860px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.band-stat {
+  text-align: right;
+}
+.band-stat b {
+  display: block;
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.band-stat span {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.55);
 }
 
 /* ── 订单头 ── */
@@ -426,7 +490,6 @@ export default {
   border: 1px solid var(--line);
   border-radius: var(--r-lg);
   padding: var(--s-5);
-  box-shadow: var(--sh-1);
 }
 .head-top {
   display: flex;
@@ -670,7 +733,6 @@ export default {
   background: var(--bg-0);
   border: 1px solid var(--line);
   border-radius: var(--r-lg);
-  box-shadow: var(--sh-3);
 }
 .bar-left {
   display: flex;
@@ -687,8 +749,8 @@ export default {
 }
 
 @media (max-width: 768px) {
-  .order-detail {
-    padding-bottom: 96px; /* 让内容不被固定操作栏挡住 */
+  .body {
+    padding: var(--s-4) var(--s-3) 96px; /* 底部留给固定操作栏 */
   }
   .head-card,
   .items-card,

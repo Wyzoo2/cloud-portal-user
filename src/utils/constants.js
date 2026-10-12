@@ -3,13 +3,13 @@
  * 术语、状态值 → 展示文本/颜色、导航菜单都在这里，全站共用，不许各页面另写一份。
  */
 
-/* ── 导航菜单（布局壳 AppLayout 用；PC 顶栏与移动底部 Tab 共用这一份） ── */
+/* ── 导航菜单（布局壳 AppLayout 用；PC 顶栏与移动端抽屉共用这一份）
+     账户中心 = 原「钱包」+「我的」合并后的单页 ── */
 export const APP_MENU = [
   { path: '/', label: '首页' },
   { path: '/products', label: '商品' },
   { path: '/orders', label: '订单' },
-  { path: '/wallet', label: '钱包' },
-  { path: '/profile', label: '我的' }
+  { path: '/account', label: '账户' }
 ]
 
 /* ── 产品线代码 → 中文名（流水/订单里只有 product_code，展示要转中文） ── */
