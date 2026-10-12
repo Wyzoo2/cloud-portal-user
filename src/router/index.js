@@ -16,7 +16,7 @@ import TransactionsView from '../views/TransactionsView.vue'
 import RechargeView from '../views/RechargeView.vue'
 import RechargesView from '../views/RechargesView.vue'
 import ProfileView from '../views/ProfileView.vue'
-import PlaceholderView from '../views/PlaceholderView.vue'
+import OrderDetailView from '../views/OrderDetailView.vue'
 
 export const router = createRouter({
   history: createWebHistory(),
@@ -31,8 +31,8 @@ export const router = createRouter({
         // 商品页游客可看（产品策略：不登录也能逛，点购买才要登录）
         { path: 'products', name: 'products', component: ProductsView, meta: { public: true, title: '商品' } },
         { path: 'orders', name: 'orders', component: OrdersView, meta: { title: '我的订单' } },
-        // ⚠️ 临时占位：订单详情页由 D 组实现。C2 下单成功后要跳这里，先给出路由
-        { path: 'orders/:id', name: 'order-detail', component: PlaceholderView, meta: { title: '订单详情' } },
+        // 订单详情（板块 D）：C2 下单成功后也跳这里，只传 order_id
+        { path: 'orders/:id', name: 'order-detail', component: OrderDetailView, meta: { title: '订单详情' } },
         { path: 'wallet', name: 'wallet', component: WalletView },
         { path: 'wallet/transactions', name: 'transactions', component: TransactionsView },
         { path: 'wallet/recharge', name: 'recharge', component: RechargeView },

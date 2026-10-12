@@ -57,6 +57,20 @@ export const WALLET_STATUS = {
   1: { text: '已冻结', type: 'danger' }
 }
 
+/* ── 订单项失败原因（fail_reason）→ 中文 ──
+   取值由产品侧回传（后端答复 §3）：PROVISION_FAILED / PROVISION_REJECTED /
+   数字码 4003 / 4004 / NETWORK / BAD_RESPONSE，且可能随产品迭代新增。
+   ⚠️ 不要穷举 switch 后显示"未知错误"：清单外一律用兜底文案。 */
+export const FAIL_REASON = {
+  PROVISION_FAILED: '开通失败（重试后仍未成功）',
+  PROVISION_REJECTED: '产品侧拒绝开通',
+  4003: '商品不存在或已下架',
+  4004: '库存不足',
+  NETWORK: '网络异常',
+  BAD_RESPONSE: '产品返回数据异常'
+}
+export const failReasonText = code => FAIL_REASON[code] || '开通失败，已自动退款'
+
 /* ── 筛选 tab：一律从上面的状态表派生，各页面别再抄一份文案 ── */
 const tabsOf = map => [
   { value: '', label: '全部' },

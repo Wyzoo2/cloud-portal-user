@@ -578,7 +578,7 @@ export default {
   transform: translateX(100%);
 }
 
-@media (max-width: 760px) {
+@media (max-width: 768px) {
   .header {
     gap: var(--s-2);
     height: 56px;

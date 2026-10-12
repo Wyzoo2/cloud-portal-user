@@ -576,7 +576,7 @@ export default {
   margin-top: var(--s-2);
 }
 
-@media (max-width: 760px) {
+@media (max-width: 768px) {
   .grid {
     grid-template-columns: repeat(2, 1fr);
     gap: var(--s-2);

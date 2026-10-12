@@ -333,7 +333,7 @@ export default {
 }
 
 /* ── 移动端 ── */
-@media (max-width: 760px) {
+@media (max-width: 768px) {
   /* 触控目标 ≥ 44px：筛选按钮太小手指点不准 */
   .tab {
     min-height: 44px;
