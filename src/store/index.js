@@ -48,16 +48,29 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
-  /** 拉取余额（布局壳常驻显示、支付/充值后刷新）；失败置 balanceError 供页面出错误态 */
-  async function refreshBalance() {
-    try {
-      balance.value = await api.getBalance()
-      balanceError.value = false
-    } catch (e) {
-      balance.value = null
-      balanceError.value = true
-    }
-    return balance.value
+  /**
+   * 拉取余额（布局壳常驻显示、支付/充值后刷新）；失败置 balanceError 供页面出错误态。
+   *
+   * 并发去重：布局壳监听路由变化会刷一次，账户页自己也会刷一次，
+   * 同一时刻的两个调用原来会发两个一模一样的请求。这里把「进行中的 Promise」复用，
+   * 并发调用只发一次网络请求，返回值完全相同，所以对调用方是透明的。
+   */
+  let balanceInflight = null
+  function refreshBalance() {
+    if (balanceInflight) return balanceInflight
+    balanceInflight = (async () => {
+      try {
+        balance.value = await api.getBalance()
+        balanceError.value = false
+      } catch (e) {
+        balance.value = null
+        balanceError.value = true
+      } finally {
+        balanceInflight = null
+      }
+      return balance.value
+    })()
+    return balanceInflight
   }
 
   return { user, balance, balanceError, isFrozen, setUser, login, register, logout, refreshBalance }

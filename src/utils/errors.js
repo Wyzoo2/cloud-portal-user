@@ -2,7 +2,8 @@
  * 错误码 → 人话提示映射（板块 A · A6）
  * 全站统一从这里取文案：页面不要自己写错误分支文案，也不要再各抄一份 1001 的展开逻辑。
  */
-import { ElMessage } from 'element-plus'
+// ElMessage 由 unplugin-auto-import 按需注入（见 vite.config.js）；
+// 显式 `from 'element-plus'` 会把整个主包拖进来，tree-shaking 失效
 
 export const ERROR_MESSAGES = {
   1001: '参数有误',

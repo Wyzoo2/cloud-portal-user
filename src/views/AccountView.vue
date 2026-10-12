@@ -130,7 +130,7 @@
 
 <script>
 import { mapActions, mapState } from 'pinia'
-import { ElMessage } from 'element-plus'
+// ElMessage 由 unplugin-auto-import 按需注入（见 vite.config.js）
 import { api } from '../api'
 import { useUserStore } from '../store'
 import { formatCents, formatTime } from '../utils/format'

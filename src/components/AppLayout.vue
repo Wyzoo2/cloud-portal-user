@@ -124,7 +124,7 @@
 </template>
 
 <script>
-import { ElMessage } from 'element-plus'
+// ElMessage 由 unplugin-auto-import 按需注入（见 vite.config.js）
 import { mapState, mapActions } from 'pinia'
 import { useUserStore } from '../store'
 import AmountText from './AmountText.vue'

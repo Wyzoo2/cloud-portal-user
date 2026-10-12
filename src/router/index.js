@@ -2,20 +2,24 @@
  * 路由（vue-router@4）
  * 守卫策略：默认需要登录；标了 meta.public 的页面游客可访问（首页、商品页、登录、注册）
  * 受保护页面统一挂在 AppLayout 下（布局壳 + 移动底部 Tab）
+ *
+ * 性能：页面组件一律**懒加载**（() => import），首屏只下载当前路由的代码；
+ * 布局壳 AppLayout 保持同步引入（它是所有内页的公共外壳，拆出去反而多一次往返）。
  */
 import { createRouter, createWebHistory } from 'vue-router'
 import { storage } from '../utils/storage'
 import AppLayout from '../components/AppLayout.vue'
-import LoginView from '../views/LoginView.vue'
-import RegisterView from '../views/RegisterView.vue'
-import HomeView from '../views/HomeView.vue'
-import ProductsView from '../views/ProductsView.vue'
-import OrdersView from '../views/OrdersView.vue'
-import AccountView from '../views/AccountView.vue'
-import TransactionsView from '../views/TransactionsView.vue'
-import RechargeView from '../views/RechargeView.vue'
-import RechargesView from '../views/RechargesView.vue'
-import OrderDetailView from '../views/OrderDetailView.vue'
+
+const LoginView = () => import('../views/LoginView.vue')
+const RegisterView = () => import('../views/RegisterView.vue')
+const HomeView = () => import('../views/HomeView.vue')
+const ProductsView = () => import('../views/ProductsView.vue')
+const OrdersView = () => import('../views/OrdersView.vue')
+const AccountView = () => import('../views/AccountView.vue')
+const TransactionsView = () => import('../views/TransactionsView.vue')
+const RechargeView = () => import('../views/RechargeView.vue')
+const RechargesView = () => import('../views/RechargesView.vue')
+const OrderDetailView = () => import('../views/OrderDetailView.vue')
 
 export const router = createRouter({
   history: createWebHistory(),
