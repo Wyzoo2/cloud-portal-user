@@ -51,6 +51,7 @@
 </template>
 
 <script>
+import { ElMessage } from 'element-plus'
 import { useUserStore } from '../store'
 import { errorList } from '../utils/errors'
 
@@ -95,6 +96,7 @@ export default {
           password: this.form.password,
           phone: this.form.phone || undefined
         })
+        ElMessage.success('注册成功，已自动登录')
         this.$router.push('/')
       } catch (e) {
         // 2001/2002 走错误码映射；1001 的多条错误逐条展示

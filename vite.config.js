@@ -1,8 +1,10 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
-// 后端地址：默认内网测试环境 .105（此前是 .103，两者都是同一套 portal 服务，按现场实际为准）。
-// 连别的后端用环境变量覆盖即可：$env:API_TARGET="http://192.168.9.103:3000"; npm run dev
+// 后端地址：默认指向内网测试环境。开发文档里写的 192.168.9.100 已过期；
+// 此前用过 .103、当前是 .105 —— 都是同一套 portal 服务，按现场实际为准。
+// 换地址【不用改代码】，用环境变量覆盖即可：
+//   $env:API_TARGET="http://192.168.9.103:3000"; npm run dev
 const API_TARGET = process.env.API_TARGET || 'http://192.168.9.105:3000'
 
 // 启动时把实际生效的后端地址打出来，方便确认代理到底打到哪
