@@ -71,6 +71,35 @@ export const FAIL_REASON = {
 }
 export const failReasonText = code => FAIL_REASON[code] || '开通失败，已自动退款'
 
+/* ── 流水明细（detail）字段名 → 中文标签 ──
+   detail 是产品侧回传的任意 JSON。**未列出的字段一律不展示**：
+   直接把 key 渲染到页面上会暴露 order_no / product_code 这类英文字段名，
+   用户看不懂。后端加了新字段也不会穿帮，只是暂不显示，需要时在下面补一行即可。 */
+export const DETAIL_LABELS = {
+  // 订单 / 商品
+  order_no: '订单号',
+  order_id: '订单号',
+  item_no: '订单项',
+  item_id: '订单项',
+  product_code: '产品线',
+  product_name: '商品',
+  sku_id: '规格',
+  spec: '规格',
+  quantity: '数量',
+  // 充值
+  recharge_id: '充值单号',
+  apply_id: '充值单号',
+  admin_id: '审核人',
+  // 通用
+  amount_cents: '金额',
+  reason: '原因',
+  fail_reason: '失败原因',
+  remark: '备注',
+  note: '说明',
+  operator: '操作人',
+  bill_no: '流水号'
+}
+
 /* ── 筛选 tab：一律从上面的状态表派生，各页面别再抄一份文案 ── */
 const tabsOf = map => [
   { value: '', label: '全部' },

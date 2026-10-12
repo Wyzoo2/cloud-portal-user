@@ -27,6 +27,9 @@
       <template #cell-detail="{ row }">
         {{ detailText(row.detail) }}
       </template>
+      <template #cell-bill_no="{ row }">
+        {{ billNoText(row.bill_no) }}
+      </template>
 
       <!-- 移动端三段式：类型+时间 / 金额 / 商品+余额 -->
       <template #mobile="{ row }">
@@ -53,14 +56,20 @@
 
 <script>
 import { api } from '../api'
-import { formatTime } from '../utils/format'
-import { TRANSACTION_TYPE, TRANSACTION_TYPE_TABS, productLineName } from '../utils/constants'
+import { formatCents, formatTime } from '../utils/format'
+import {
+  TRANSACTION_TYPE, TRANSACTION_TYPE_TABS, productLineName,
+  DETAIL_LABELS, failReasonText
+} from '../utils/constants'
 import { AmountText, PagedTable, EmptyState, StatusTag } from '../components'
 
-/** detail 是产品传的任意 JSON：嵌套值降级成 JSON 字符串，绝不渲染出 [object Object] */
-function flatValue(v) {
-  if (v == null) return '-'
-  if (typeof v === 'object') return JSON.stringify(v)
+/** 明细字段值 → 展示文本：枚举/金额做翻译；嵌套对象不展示，避免渲染出 JSON 字符串 */
+function detailValueText(key, v) {
+  if (v == null || v === '') return ''
+  if (typeof v === 'object') return ''
+  if (key === 'product_code') return productLineName(v)
+  if (key === 'fail_reason') return failReasonText(v)
+  if (key.endsWith('_cents')) return formatCents(Number(v))
   return String(v)
 }
 
@@ -79,12 +88,12 @@ export default {
       tabs: TRANSACTION_TYPE_TABS,
       columns: [
         { key: 'type', label: '类型', width: 90 },
-        { key: 'amount_cents', label: '金额' },
-        { key: 'balance_after', label: '变动后余额' },
-        { key: 'product_code', label: '商品' },
-        { key: 'detail', label: '明细' },
-        { key: 'created_at', label: '时间', formatter: row => formatTime(row.created_at) },
-        { key: 'bill_no', label: '流水号' }
+        { key: 'amount_cents', label: '金额', width: 120 },
+        { key: 'balance_after', label: '变动后余额', width: 120 },
+        { key: 'product_code', label: '商品', width: 100 },
+        { key: 'detail', label: '明细', minWidth: 220 },
+        { key: 'created_at', label: '时间', width: 160, formatter: row => formatTime(row.created_at) },
+        { key: 'bill_no', label: '流水号', minWidth: 140 }
       ]
     }
   },
@@ -125,13 +134,41 @@ export default {
       return { 1: 'amt-in', 2: 'amt-out', 3: 'amt-in' }[t] || ''
     },
     detailText(detail) {
-      if (detail == null) return '-'
-      if (typeof detail === 'string') return detail
-      if (Array.isArray(detail)) return detail.map(flatValue).join(', ')
-      if (typeof detail === 'object') {
-        return Object.entries(detail).map(([k, v]) => `${k}: ${flatValue(v)}`).join(' · ')
+      const parts = this.detailParts(detail)
+      return parts.length ? parts.join(' · ') : '-'
+    },
+    /** 流水号是后端内部幂等键（order:305:item:1 / refund:67:1760… / phone-20261005-000123），
+        直接显示是一串看不懂的英文。这里翻译成「订单 305」这样的可读形式。 */
+    billNoText(billNo) {
+      if (billNo == null || billNo === '') return '-'
+      const s = String(billNo)
+      // 1) 内部幂等键：{kind}:{编号}[:...]
+      const seg = s.split(':')
+      const KIND = { order: '订单', refund: '退款', recharge: '充值', deduct: '扣费', adjust: '调账' }
+      if (seg.length > 1 && KIND[seg[0]]) {
+        return seg[1] ? `${KIND[seg[0]]} ${seg[1]}` : KIND[seg[0]]
       }
-      return String(detail)
+      // 2) 产品侧账单号：{product_code}-{日期}-{序号}，把产品线前缀换成中文
+      const m = s.match(/^(storage|phone|desktop)-(.+)$/)
+      if (m) return `${productLineName(m[1])} ${m[2]}`
+      // 3) 其余编号原样展示（本身就是可读的单号）
+      return s
+    },
+    /** detail 是产品传的任意 JSON：只渲染 DETAIL_LABELS 里登记过的字段，避免暴露英文字段名 */
+    detailParts(detail) {
+      if (detail == null || detail === '') return []
+      if (typeof detail === 'string') return [detail]
+      if (typeof detail === 'number' || typeof detail === 'boolean') return [String(detail)]
+      if (Array.isArray(detail)) return detail.flatMap(d => this.detailParts(d))
+      if (typeof detail === 'object') {
+        return Object.entries(detail).flatMap(([k, v]) => {
+          const label = DETAIL_LABELS[k]
+          if (!label) return []
+          const text = detailValueText(k, v)
+          return text ? [`${label} ${text}`] : []
+        })
+      }
+      return []
     },
     onFilter() {
       this.page = 1
