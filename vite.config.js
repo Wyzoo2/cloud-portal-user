@@ -15,7 +15,6 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': {
-        // 必须用 API_TARGET，否则环境变量覆盖不生效（曾被写死成字面量导致覆盖无效）
         target: API_TARGET,
         changeOrigin: true
       }

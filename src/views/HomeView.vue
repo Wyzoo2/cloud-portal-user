@@ -559,13 +559,26 @@ export default {
 }
 @media (max-width: 560px) {
   .hero {
-    padding: 64px 16px 96px;
+    padding: 48px 16px 88px;
   }
   .hero h1 {
-    font-size: 32px;
+    font-size: 30px;
   }
+  .hero-sub {
+    font-size: 15px;
+    margin-bottom: 20px;
+  }
+  .hero-tags {
+    margin-bottom: 24px;
+  }
+  /* 按钮并排平分宽度，避免两个全宽按钮堆叠占屏 */
   .hero-cta {
-    flex-direction: column;
+    gap: 10px;
+  }
+  .btn-hero {
+    flex: 1;
+    padding: 13px 12px;
+    font-size: 15px;
   }
   .prod-grid {
     grid-template-columns: 1fr;
@@ -573,15 +586,29 @@ export default {
   .why {
     padding: 32px 24px;
   }
+  /* 统计条 2×2，比 4 行 1 列紧凑 */
   .stats-card {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
   }
   .stat {
-    border-right: 0;
+    padding: 18px 14px;
+    border-right: 1px solid var(--line);
     border-bottom: 1px solid var(--line);
   }
-  .stat:last-child {
+  .stat:nth-child(2n) {
+    border-right: 0;
+  }
+  .stat:nth-last-child(-n + 2) {
     border-bottom: 0;
+  }
+  .stat b {
+    font-size: 24px;
+  }
+  .cta {
+    padding: 40px 20px;
+  }
+  .cta h3 {
+    font-size: 22px;
   }
 }
 </style>
