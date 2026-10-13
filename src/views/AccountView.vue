@@ -240,11 +240,14 @@ export default {
       this.$router.push('/login')
     },
     async onSubmit() {
-      const valid = await this.$refs.formRef.validate().catch(() => false)
-      if (!valid) return
+      // 防重复提交：validate() 是异步的，等它返回再置 saving 会留下空窗期，
+      // 用户快速双击会发两次改密请求 —— 守卫和 saving 必须放在最前面
+      if (this.saving) return
       this.saving = true
-      this.error = ''
       try {
+        const valid = await this.$refs.formRef.validate().catch(() => false)
+        if (!valid) return
+        this.error = ''
         await api.changePassword(this.form.old_password, this.form.new_password)
         ElMessage.success('密码修改成功，请重新登录')
         this.logout()

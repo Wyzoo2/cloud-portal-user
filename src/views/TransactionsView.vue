@@ -112,6 +112,8 @@ export default {
       size: 20,
       loading: false,
       error: false,
+      // 竞态保护用：每次 load 自增，只认最后一次请求的结果
+      loadSeq: 0,
       tabs: TRANSACTION_TYPE_TABS,
       columns: [
         { key: 'type', label: '类型', width: 90 },
@@ -144,6 +146,9 @@ export default {
     formatCents,
     productLineName,
     async load() {
+      // 竞态保护：快速切筛选/翻页会并发多个请求，先发的若后返回会覆盖新数据。
+      // 自增序号，只认最后一次请求的结果。
+      const seq = ++this.loadSeq
       this.loading = true
       this.error = false
       try {
@@ -151,15 +156,17 @@ export default {
         const params = { page: this.page, size: this.size }
         if (this.type !== '') params.type = this.type
         const data = await api.getTransactions(params)
+        if (seq !== this.loadSeq) return
         this.rows = (data && data.list) || []
         this.total = (data && data.total) || 0
       } catch (e) {
+        if (seq !== this.loadSeq) return
         // 失败统一走空态里的「重新加载」，不再额外 toast，避免同一错误两处反馈
         this.error = true
         this.rows = []
         this.total = 0
       } finally {
-        this.loading = false
+        if (seq === this.loadSeq) this.loading = false
       }
     },
     // 1 充值 / 2 扣费 / 3 退款 的方向由 type 决定；4 调账由金额正负决定
