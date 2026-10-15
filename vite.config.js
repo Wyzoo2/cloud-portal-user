@@ -3,6 +3,7 @@ import vue from '@vitejs/plugin-vue'
 import Components from 'unplugin-vue-components/vite'
 import AutoImport from 'unplugin-auto-import/vite'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
+import { MOUNTED, API_BASE } from './src/deploy.config.js'
 
 // 后端地址：默认指向内网测试环境。开发文档里写的 192.168.9.100 已过期；
 // 此前用过 .103、当前是 .105 —— 都是同一套 portal 服务，按现场实际为准。
@@ -10,8 +11,8 @@ import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 //   $env:API_TARGET="http://192.168.9.103:3000"; npm run dev
 const API_TARGET = process.env.API_TARGET || 'http://192.168.9.105:3000'
 
-// 启动时把实际生效的后端地址打出来，方便确认代理到底打到哪
-console.log(`[vite] /api  →  ${API_TARGET}`)
+// 启动时把实际生效的接口前缀 / 后端地址打出来，方便确认代理到底打到哪
+console.log(`[vite] ${API_BASE}  →  ${API_TARGET}（MOUNTED=${MOUNTED}）`)
 
 export default defineConfig({
   plugins: [
@@ -43,6 +44,12 @@ export default defineConfig({
       '/api': {
         target: API_TARGET,
         changeOrigin: true
+      },
+      // 生产接口前缀 /portal/api；转发时剥掉 /portal（后端若配了 context-path=/portal 则删掉 rewrite）
+      '/portal/api': {
+        target: API_TARGET,
+        changeOrigin: true,
+        rewrite: p => p.replace(/^\/portal/, '')
       }
     }
   },
