@@ -234,6 +234,55 @@ export default {
       ]
       await Promise.allSettled(jobs)
       this.loading = false
+      // 余额已就绪，这时再检查有没有「刚到账」的充值并提示（不阻塞上面的展示）
+      this.notifyArrivedRecharge()
+    },
+
+    /**
+     * 充值到账提示：进账户页时查一次「已到账」的充值，与本地基线比对，有新到账的弹一条合并提示。
+     *
+     * - 首次进入（本地还没有基线）只记录当前已到账的单号、不提示 ——
+     *   否则用户第一次进来会被历史到账一次性弹一堆。
+     * - 提示后立刻刷新基线，同一笔不会重复提示。
+     * - 多笔同时到账合并成一条。
+     * - 整个过程静默失败：它只是锦上添花的提醒，不能因为查询异常打断账户页的使用。
+     */
+    async notifyArrivedRecharge() {
+      const KEY = 'portal_arrived_recharges'
+      try {
+        const d = await api.getRecharges({ page: 1, size: 100, status: 1 })
+        const list = (d && d.list) || []
+        const ids = list.map(r => String(r.apply_id))
+
+        const saved = localStorage.getItem(KEY)
+        if (saved === null) {
+          // 首次进页面：只建立基线，不打扰用户
+          localStorage.setItem(KEY, JSON.stringify(ids))
+          return
+        }
+
+        let known = []
+        try { known = JSON.parse(saved) || [] } catch (e) { known = [] }
+        const knownSet = new Set(known.map(String))
+        const fresh = list.filter(r => !knownSet.has(String(r.apply_id)))
+
+        // 无论有没有新到账都刷新基线（顺带丢掉后端已不存在的单号）
+        localStorage.setItem(KEY, JSON.stringify(ids))
+        if (!fresh.length) return
+
+        const total = fresh.reduce((s, r) => s + (Number(r.amount_cents) || 0), 0)
+        const what = fresh.length === 1
+          ? `充值 ${formatCents(fresh[0].amount_cents)} 已到账`
+          : `${fresh.length} 笔充值已到账，合计 ${formatCents(total)}`
+        const bal = this.balanceCents == null ? '' : `，当前余额 ${formatCents(this.balanceCents)}`
+
+        ElMessageBox.alert(what + bal, '充值已到账', {
+          confirmButtonText: '知道了',
+          type: 'success'
+        }).catch(() => {})
+      } catch (e) {
+        // 静默：查不到就不提示，不影响账户页正常使用
+      }
     },
     onLogout() {
       this.logout()
