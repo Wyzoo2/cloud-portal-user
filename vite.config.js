@@ -49,7 +49,7 @@ export default defineConfig({
       '/portal/api': {
         target: API_TARGET,
         changeOrigin: true,
-        rewrite: p => p.replace(/^\/portal/, '')
+        // rewrite: p => p.replace(/^\/portal/, '')
       }
     }
   },
