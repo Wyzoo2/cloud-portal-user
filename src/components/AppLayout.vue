@@ -142,6 +142,7 @@ export default {
   },
   beforeUnmount() {
     window.removeEventListener('scroll', this.onScroll)
+    if (this.scrollRaf) window.cancelAnimationFrame(this.scrollRaf)
   },
   watch: {
     // 路由变化：收起移动端抽屉 + 已登录时刷新余额
@@ -189,7 +190,13 @@ export default {
   methods: {
     ...mapActions(useUserStore, ['logout', 'refreshBalance']),
     onScroll() {
-      this.scrolled = window.scrollY > 8
+      // rAF 节流：滚动事件每秒可触发上百次，原来的写法每次都读 scrollY 并赋值。
+      // 压到「每帧最多一次」，滚动时不再做无谓的重复计算。
+      if (this.scrollRaf) return
+      this.scrollRaf = window.requestAnimationFrame(() => {
+        this.scrollRaf = 0
+        this.scrolled = window.scrollY > 8
+      })
     },
     isActive(path) {
       const p = this.$route.path

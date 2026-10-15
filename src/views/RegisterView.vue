@@ -86,11 +86,14 @@ export default {
   },
   methods: {
     async onRegister() {
-      const valid = await this.$refs.formRef.validate().catch(() => false)
-      if (!valid) return
+      // 防重复提交：validate() 是异步的，等它返回再置 loading 会留下空窗期，
+      // 用户快速双击会重复注册 —— 守卫和 loading 必须放在最前面
+      if (this.loading) return
       this.loading = true
-      this.errors = []
       try {
+        const valid = await this.$refs.formRef.validate().catch(() => false)
+        if (!valid) return
+        this.errors = []
         await useUserStore().register({
           username: this.form.username,
           password: this.form.password,

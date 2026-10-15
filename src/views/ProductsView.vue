@@ -205,6 +205,8 @@ export default {
       list: [],
       loading: true,
       error: false,
+      // 竞态保护用：每次 load 自增，只认最后一次请求的结果
+      loadSeq: 0,
       errMsg: '商品加载失败，请稍后重试',
       productCode: '', // '' = 全部
       drawer: false,
@@ -280,18 +282,22 @@ export default {
   methods: {
     ...mapActions(useUserStore, ['refreshBalance']),
     async load() {
+      // 竞态保护：快速切产品线会并发多个请求，先发的若后返回会覆盖新数据
+      const seq = ++this.loadSeq
       this.loading = true
       this.error = false
       try {
         const params = this.productCode ? { product_code: this.productCode } : {}
         const data = await api.getProducts(params)
+        if (seq !== this.loadSeq) return
         this.list = (data && data.list) || []
       } catch (e) {
+        if (seq !== this.loadSeq) return
         this.error = true
         this.list = []
         this.errMsg = errorText(e) || '商品加载失败，请稍后重试'
       } finally {
-        this.loading = false
+        if (seq === this.loadSeq) this.loading = false
       }
     },
     switchTab(value) {

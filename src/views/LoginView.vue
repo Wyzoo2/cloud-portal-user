@@ -73,11 +73,14 @@ export default {
   },
   methods: {
     async onLogin() {
-      const valid = await this.$refs.formRef.validate().catch(() => false)
-      if (!valid) return
+      // 防重复提交：validate() 是异步的，等它返回再置 loading 会留下一个空窗期，
+      // 用户快速双击就会发两次登录请求 —— 守卫和 loading 必须放在最前面
+      if (this.loading) return
       this.loading = true
-      this.errors = []
       try {
+        const valid = await this.$refs.formRef.validate().catch(() => false)
+        if (!valid) return
+        this.errors = []
         await useUserStore().login(this.form.username, this.form.password)
         ElMessage.success('登录成功')
         const redirect = this.$route.query.redirect

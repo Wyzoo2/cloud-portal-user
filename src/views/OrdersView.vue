@@ -171,6 +171,8 @@ export default {
       drawer: false,
       loading: true,
       error: false,
+      // 竞态保护用：每次 load 自增，只认最后一次请求的结果
+      loadSeq: 0,
       errMsg: '订单加载失败，请稍后重试',
       // 各状态订单数：用 size=1 只读 total，4 个轻请求；失败则该格显示 —
       counts: { all: null, 0: null, 1: null, 2: null, 3: null },
@@ -225,6 +227,9 @@ export default {
       await Promise.allSettled(jobs)
     },
     async load() {
+      // 竞态保护：快速切筛选/翻页会并发多个请求，先发的若后返回会覆盖新数据。
+      // 自增序号，只认最后一次请求的结果。
+      const seq = ++this.loadSeq
       this.loading = true
       this.error = false
       try {
@@ -232,15 +237,17 @@ export default {
         const params = { page: this.page, size: this.size }
         if (this.status !== '') params.status = this.status
         const data = await api.getOrders(params)
+        if (seq !== this.loadSeq) return
         this.rows = ((data && data.list) || []).map(normalizeRow)
         this.total = (data && data.total) || 0
       } catch (e) {
+        if (seq !== this.loadSeq) return
         this.error = true
         this.rows = []
         this.total = 0
         this.errMsg = errorText(e) || '订单加载失败，请稍后重试'
       } finally {
-        this.loading = false
+        if (seq === this.loadSeq) this.loading = false
       }
     },
     switchTab(value) {
