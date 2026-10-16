@@ -71,9 +71,19 @@ http.interceptors.response.use(
     return body
   },
   err => {
-    const msg = (err.response && err.response.data && err.response.data.message)
-      || (err.code === 'ECONNABORTED' ? '请求超时，请检查网络' : '')
-      || (err.message === 'Network Error' ? '无法连接服务器' : err.message)
+    // 后端给了 message 就用它；否则统一成中文文案。
+    // 不要把 axios 的英文原文（"Request failed with status code 500" /
+    // "timeout of 15000ms exceeded"）透给用户，原文只留在开发者控制台。
+    const serverMsg = err.response && err.response.data && err.response.data.message
+    let msg = serverMsg
+    if (!msg) {
+      if (err.code === 'ECONNABORTED') msg = '请求超时，请检查网络'
+      else if (err.message === 'Network Error') msg = '无法连接服务器'
+      else msg = '请求失败，请稍后重试'
+    }
+    if (import.meta.env.DEV && !serverMsg) {
+      console.warn('[请求失败]', (err.config && err.config.url) || '', err.message)
+    }
     return Promise.reject(new Error(msg))
   }
 )

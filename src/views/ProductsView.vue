@@ -270,7 +270,9 @@ export default {
     // 注意语义差别：商品目录 /shop/products 的 price_cents 是「单价」，
     // 而订单项 /shop/orders/{id} 的 price_cents 是「该项小计」（已含数量），两者不要混用。
     totalCents() {
-      return this.current ? this.current.price_cents * this.qty : 0
+      // price_cents 理论上一定有值，但缺字段时 `undefined * qty` 会算出 NaN 渲染成 ¥NaN，
+      // 这里统一兜成 0（展示层再由 formatCents 二次保护）
+      return this.current ? (Number(this.current.price_cents) || 0) * this.qty : 0
     }
   },
   created() {

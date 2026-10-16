@@ -198,7 +198,10 @@ export default {
       pollTimedOut: false,
       pollSeconds: 0,
       pollTimer: null,
-      pollStart: 0
+      pollStart: 0,
+      // 卸载标志：轮询的 setTimeout 回调里 await 之后要靠它判活，
+      // 否则「定时器已触发 + 请求在飞行中」时离开页面，回调会重新排定时器让轮询复活
+      destroyed: false
     }
   },
   computed: {
@@ -261,7 +264,19 @@ export default {
     this.load()
   },
   beforeUnmount() {
+    // 置标志要在 stopPoll 之前：定时器可能已触发、请求还在飞行中，靠它挡住回调里的续排
+    this.destroyed = true
     this.stopPoll()
+  },
+  watch: {
+    // 同一个路由记录内换订单（/orders/1 → /orders/2）时组件实例会被复用、created 不会重跑，
+    // 不监听就会一直显示上一个订单，轮询还会继续打旧 id
+    '$route.params.id'() {
+      if (this.destroyed) return
+      this.stopPoll()
+      this.pollTimedOut = false
+      this.load()
+    }
   },
   methods: {
     ...mapActions(useUserStore, ['refreshBalance']),
@@ -424,8 +439,12 @@ export default {
       this.pollTimer = setTimeout(async () => {
         try {
           const data = await api.getOrder(this.$route.params.id)
+          // 请求飞行期间可能已经离开页面：此时不能再 applyOrder / 弹提示 / 续排定时器，
+          // 否则轮询会在后台自我复活（SPA 里每次进出都会多留一条链）
+          if (this.destroyed) return
           if (data) this.applyOrder(data)
         } catch (e) {
+          if (this.destroyed) return
           // 单次轮询失败不打断流程（1003 由拦截器自动 refresh 后重放）；
           // 但订单已不存在就没必要继续轮询
           if (Number(e && e.code) === 4001) {
@@ -434,6 +453,7 @@ export default {
             return
           }
         }
+        if (this.destroyed) return
         this.tick()
       }, POLL_INTERVAL)
     },

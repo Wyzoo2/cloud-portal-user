@@ -20,7 +20,15 @@ export const useUserStore = defineStore('user', () => {
     storage.user = u
   }
 
+  // 会话代号：登录 / 注册 / 登出都自增，用来丢弃「上一个会话」还在飞行的余额响应
+  // （否则 A 登出、B 登录后，A 的余额响应回来会写进 B 的会话）
+  let sessionSeq = 0
+  // 余额并发去重用的「进行中 Promise」（见 refreshBalance）
+  let balanceInflight = null
+
   async function login(username, password) {
+    sessionSeq += 1
+    balanceInflight = null
     const res = await api.login(username, password)
     storage.token = res.access_token
     setUser(res.user)
@@ -29,6 +37,8 @@ export const useUserStore = defineStore('user', () => {
 
   /** 注册即登录：接口返回结构同登录 */
   async function register(payload) {
+    sessionSeq += 1
+    balanceInflight = null
     const res = await api.register(payload)
     storage.token = res.access_token
     setUser(res.user)
@@ -38,6 +48,9 @@ export const useUserStore = defineStore('user', () => {
   function logout() {
     // 先存 token → 同步清本地（立即生效，避免路由守卫仍读到 token）→ 用存下的 token 调登出
     const token = storage.token
+    // 作废当前会话：在途的余额请求回来时会被丢弃，不会把上一个账号的余额写进新会话
+    sessionSeq += 1
+    balanceInflight = null
     storage.clear()
     user.value = null
     balance.value = null
@@ -54,19 +67,25 @@ export const useUserStore = defineStore('user', () => {
    * 并发去重：布局壳监听路由变化会刷一次，账户页自己也会刷一次，
    * 同一时刻的两个调用原来会发两个一模一样的请求。这里把「进行中的 Promise」复用，
    * 并发调用只发一次网络请求，返回值完全相同，所以对调用方是透明的。
+   *
+   * 会话校验：响应回来时若已经登出/换号（sessionSeq 变了），这次结果直接丢弃，
+   * 否则会把上一个账号的余额写进当前会话。
    */
-  let balanceInflight = null
   function refreshBalance() {
     if (balanceInflight) return balanceInflight
+    const seq = sessionSeq
     balanceInflight = (async () => {
       try {
-        balance.value = await api.getBalance()
+        const data = await api.getBalance()
+        if (seq !== sessionSeq) return null
+        balance.value = data
         balanceError.value = false
       } catch (e) {
+        if (seq !== sessionSeq) return null
         balance.value = null
         balanceError.value = true
       } finally {
-        balanceInflight = null
+        if (seq === sessionSeq) balanceInflight = null
       }
       return balance.value
     })()
