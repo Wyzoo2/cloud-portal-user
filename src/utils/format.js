@@ -2,10 +2,12 @@
  * 展示工具函数：金额（分 → 元）、时间（后端返回什么就展示什么）
  */
 
-/** 分 → 元；null / undefined 返回 '-' */
+/** 分 → 元；null / undefined / 非数字 返回 '-'（避免页面上出现 ¥NaN） */
 export function formatCents(cents) {
   if (cents === null || cents === undefined) return '-'
-  return '¥' + (cents / 100).toFixed(2)
+  const n = Number(cents)
+  if (!Number.isFinite(n)) return '-'
+  return '¥' + (n / 100).toFixed(2)
 }
 
 /**

@@ -136,18 +136,30 @@ import { useUserStore } from '../store'
 import { formatCents, formatTime } from '../utils/format'
 import { productLineName, WALLET_STATUS } from '../utils/constants'
 import { errorText } from '../utils/errors'
-import { AmountText, PageBand, Panel, KpiRow, StatusTag, SiteFooter } from '../components'
+import { AmountText, PageBand, Panel, StatusTag, SiteFooter } from '../components'
+
+/** 写本地账本：配额满 / 隐私模式下 setItem 会抛，不能让它打断提示流程 */
+function writeBaseline(key, ids) {
+  try {
+    localStorage.setItem(key, JSON.stringify(ids))
+  } catch (e) {
+    if (import.meta.env.DEV) console.warn('[到账提示] 本地账本写入失败', e)
+  }
+}
 
 export default {
   name: 'AccountView',
-  components: { AmountText, PageBand, Panel, KpiRow, StatusTag, SiteFooter },
+  components: { AmountText, PageBand, Panel, StatusTag, SiteFooter },
   data() {
     return {
       loading: false,
-      // 指标与最近流水都从这一份数据算，口径在页面上写清
+      // 最近流水从这一份数据算，口径在页面上写清
       tx: [],
-      pendingCount: 0,
-      pendingCents: 0,
+      // 到账提示用：页面卸载标志 + 请求序号（快速切页/双击重试时只认最后一次）
+      destroyed: false,
+      arrivedSeq: 0,
+      // 重新加载的重入保护
+      reloading: false,
       saving: false,
       error: '',
       form: { old_password: '', new_password: '', confirm_password: '' },
@@ -194,46 +206,112 @@ export default {
     },
     recent() {
       return this.tx.slice(0, 5)
-    },
-    /** 指标：全部是真实数据，口径在页面上注明 */
-    kpis() {
-      const consumption = this.sumByType([2])
-      const recharge = this.sumByType([1])
-      return [
-        { label: '可用余额', value: this.balanceCents == null ? '-' : formatCents(this.balanceCents) },
-        { label: '待核销充值', value: formatCents(this.pendingCents), unit: this.pendingCount ? `（${this.pendingCount} 笔）` : '' },
-        { label: '累计充值（近 100 笔）', value: formatCents(recharge) },
-        { label: '累计消费（近 100 笔）', value: formatCents(consumption) }
-      ]
     }
   },
   created() {
     this.reload()
+  },
+  beforeUnmount() {
+    // 到账提示是 fire-and-forget：卸载后别再弹全局框（用户已经翻到别的页面了）
+    this.destroyed = true
   },
   methods: {
     ...mapActions(useUserStore, ['refreshBalance', 'logout']),
     formatTime,
     formatCents,
     productLineName,
-    sumByType(types) {
-      return this.tx
-        .filter(t => types.includes(Number(t.type)))
-        .reduce((sum, t) => sum + Math.abs(Number(t.amount_cents) || 0), 0)
-    },
     async reload() {
+      // 重入保护：连点「重新加载」会并发两次，旧响应可能盖掉新数据、还会重复弹到账提示
+      if (this.reloading) return
+      this.reloading = true
       this.loading = true
-      const jobs = [
-        this.refreshBalance(),
-        // 流水与待核销用于指标与"最近流水"，失败不影响账户信息展示
-        api.getTransactions({ page: 1, size: 100 }).then(d => { this.tx = (d && d.list) || [] }).catch(() => { this.tx = [] }),
-        api.getRecharges({ page: 1, size: 100, status: 0 }).then(d => {
-          const list = (d && d.list) || []
-          this.pendingCount = list.length
-          this.pendingCents = list.reduce((s, r) => s + Number(r.amount_cents || 0), 0)
-        }).catch(() => { this.pendingCount = 0; this.pendingCents = 0 })
-      ]
-      await Promise.allSettled(jobs)
-      this.loading = false
+      try {
+        await Promise.allSettled([
+          this.refreshBalance(),
+          // 最近流水只用于下方展示，失败不影响账户信息
+          api.getTransactions({ page: 1, size: 100 })
+            .then(d => { this.tx = (d && d.list) || [] })
+            .catch(() => { this.tx = [] })
+        ])
+      } finally {
+        this.loading = false
+        this.reloading = false
+      }
+      // 余额已就绪，这时再检查有没有「刚到账」的充值并提示（不阻塞上面的展示）
+      this.notifyArrivedRecharge()
+    },
+
+    /**
+     * 充值到账提示：进账户页时查一次「已到账」的充值，与本地账本比对，有新到账的弹一条合并提示。
+     *
+     * 本地存的是一份【已提示集合】而不是"当前快照"，为的是堵住这几类误报：
+     * - 首次进入（该用户还没有账本）只建立基线、不提示，否则历史到账会一次性弹一堆
+     * - 基线按并集累积并封顶：单号滑出「前 100 条」后不会被误判成刚到账（否则会弹一笔虚假合计）
+     * - 接口返回空列表时保持原基线不动（视作查询异常），避免下次把历史全当新到账
+     * - 账本按用户 id 命名空间隔离：换账号不会把上一个账号的到账认成自己的
+     * - 账本损坏（parse 失败）只重建、不提示
+     * - 多笔同时到账合并成一条；卸载后不再弹框；全程静默失败，不影响账户页使用
+     */
+    async notifyArrivedRecharge() {
+      const uid = (this.user && this.user.id) || 'anonymous'
+      const KEY = `portal_arrived_recharges:${uid}`
+      const MAX = 500
+      const seq = ++this.arrivedSeq
+      try {
+        const d = await api.getRecharges({ page: 1, size: 100, status: 1 })
+        // 期间又发起过一次（快速切页 / 双击重试）或页面已卸载 → 这次结果作废，避免重复弹窗
+        if (seq !== this.arrivedSeq || this.destroyed) return
+
+        const list = (d && d.list) || []
+        // apply_id 缺失的行没法当唯一键（String(undefined) 会全塌成一格），跳过
+        const ids = list.filter(r => r && r.apply_id != null).map(r => String(r.apply_id))
+
+        const saved = localStorage.getItem(KEY)
+        if (saved === null) {
+          // 该用户首次进页面：只建立基线，不打扰
+          writeBaseline(KEY, ids)
+          return
+        }
+
+        let known = null
+        try { known = JSON.parse(saved) } catch (e) { known = null }
+        if (!Array.isArray(known)) {
+          // 账本损坏：重建基线，绝不当成"全是新的"
+          writeBaseline(KEY, ids)
+          return
+        }
+
+        if (!ids.length) {
+          // 有账本却一条已到账都查不到 → 视为查询异常，保持基线不动
+          if (known.length) return
+          writeBaseline(KEY, [])
+          return
+        }
+
+        const knownSet = new Set(known.map(String))
+        const fresh = list.filter(r => r.apply_id != null && !knownSet.has(String(r.apply_id)))
+
+        // 基线取并集并封顶：老单号不会被遗忘，也就不会被误判成新到账
+        writeBaseline(KEY, Array.from(new Set([...known, ...ids])).slice(-MAX))
+        if (!fresh.length) return
+
+        const total = fresh.reduce((s, r) => s + (Number(r.amount_cents) || 0), 0)
+        const what = fresh.length === 1
+          ? `充值 ${formatCents(fresh[0].amount_cents)} 已到账`
+          : `${fresh.length} 笔充值已到账，合计 ${formatCents(total)}`
+        // 后端已经给了权威的「到账后余额」，优先用它；取不到再退回页面余额
+        const after = fresh.reduce((max, r) => Math.max(max, Number(r.balance_after) || 0), 0)
+        const cents = after || this.balanceCents
+        const bal = cents == null ? '' : `，当前余额 ${formatCents(cents)}`
+
+        ElMessageBox.alert(what + bal, '充值已到账', {
+          confirmButtonText: '知道了',
+          type: 'success'
+        }).catch(() => {})
+      } catch (e) {
+        // 静默：查不到就不提示，不影响账户页正常使用（dev 下留个痕，便于排查）
+        if (import.meta.env.DEV) console.warn('[到账提示] 已跳过', e)
+      }
     },
     onLogout() {
       this.logout()
@@ -409,15 +487,6 @@ export default {
   color: var(--ink-3);
 }
 .e-arrow {
-  color: var(--ink-4);
-}
-
-.kpis {
-  margin-top: var(--s-5);
-}
-.kpi-note {
-  margin: 10px 0 0;
-  font-size: 12px;
   color: var(--ink-4);
 }
 
