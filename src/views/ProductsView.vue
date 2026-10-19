@@ -69,13 +69,21 @@
 
               <h3 class="name">{{ p.name }}</h3>
 
-              <!-- 规格：按后端返回的 key 通用渲染，不假设任何字段 -->
+              <!-- 规格：按后端返回的 key 通用渲染，不假设任何字段（key→中文 的映射见 SPEC_LABEL） -->
               <div v-if="specEntries(p.spec).length" class="spec">
                 <div v-for="row in specEntries(p.spec)" :key="row.key" class="spec-row">
                   <span class="spec-k">{{ row.label }}</span>
                   <span class="spec-v">{{ row.value }}</span>
                 </div>
               </div>
+
+              <!-- 卖点（后端 spec.highlights 数组）：做成小标签；与上面规格重复的会自动去掉 -->
+              <div v-if="highlightsOf(p.spec).length" class="hl">
+                <span v-for="h in highlightsOf(p.spec)" :key="h" class="hl-tag">{{ h }}</span>
+              </div>
+
+              <!-- 说明（后端 spec.details 数组）：一行灰色小字 -->
+              <p v-if="detailsOf(p.spec)" class="spec-detail">{{ detailsOf(p.spec) }}</p>
 
               <!-- 计费：包周期 / 按量 -->
               <div class="price">
@@ -186,12 +194,46 @@ import { useIsMobile } from '../utils/breakpoint'
 import { AmountText, EmptyState, LoadingBox, PageBand, Panel, KpiRow, SiteFooter } from '../components'
 
 // 规格字段的展示名/单位：只影响"好不好看"，未知 key 会原样显示，不影响兼容
+// 真实后端 13 个 SKU 里出现过的全部 key（2026-10-19 抓的目录接口）：
+//   云存储 period / quota_gb / transfer
+//   云手机 cpu / memory / storage / android / resolution / device_count
+//   云电脑 cpu_cores / ram_gb / disk_gb / unit_price
+//   三条产品线都有 details(数组·说明) / highlights(数组·卖点)
 const SPEC_LABEL = {
-  quota_gb: '容量', region: '地域', transfer: '流量', note: '说明',
-  vcpu: 'CPU', ram_gb: '内存', storage_gb: '存储', ip: '网络',
-  disk_gb: '系统盘', os: '系统'
+  // 云存储
+  period: '计费周期', quota_gb: '容量', transfer: '流量',
+  // 云手机
+  cpu: 'CPU', memory: '内存', storage: '存储', android: '系统版本',
+  resolution: '分辨率', device_count: '可开设备数',
+  // 云电脑
+  cpu_cores: 'CPU', ram_gb: '内存', disk_gb: '磁盘', unit_price: '单价',
+  // 通用 / 历史遗留
+  region: '地域', note: '说明', vcpu: 'CPU', storage_gb: '存储', ip: '网络', os: '系统'
 }
-const SPEC_UNIT = { quota_gb: 'GB', ram_gb: 'GB', storage_gb: 'GB', disk_gb: 'GB', vcpu: '核' }
+
+// key 需要补单位（值本身不带单位时才加）
+const SPEC_UNIT = {
+  quota_gb: 'GB', ram_gb: 'GB', storage_gb: 'GB', disk_gb: 'GB',
+  cpu_cores: '核', vcpu: '核', device_count: '台'
+}
+
+// 枚举值翻译：后端会直接给英文（如云存储的流量是 "unlimited"）
+const SPEC_VALUE_TEXT = { unlimited: '不限量', unmetered: '不限量', none: '-' }
+
+// 不进「键值行」的字段：数组类单独排版，unit_price 是价格文案（卡片上已有 ¥ 主价格，避免两个价格打架）
+const SPEC_NOT_ROW = new Set(['details', 'highlights', 'unit_price'])
+
+// 规格行的展示顺序（后端返回顺序各产品线不一样，这里统一；未知 key 排最后）
+const SPEC_ORDER = [
+  'cpu_cores', 'cpu', 'ram_gb', 'memory', 'disk_gb', 'storage', 'storage_gb',
+  'quota_gb', 'transfer', 'period', 'android', 'os', 'resolution', 'device_count',
+  'region', 'ip', 'note'
+]
+
+/** 去掉空白的比较用串："8 GB" / "8gb" / "8 GB 内存" 都归一化，用于判断卖点是否与规格重复 */
+function normText(v) {
+  return String(v == null ? '' : v).replace(/\s+/g, '').toLowerCase()
+}
 
 export default {
   name: 'ProductsView',
@@ -323,14 +365,58 @@ export default {
       if (this.isFrozen) return '钱包已冻结'
       return this.isSoldOut(p) ? '已售罄' : '立即购买'
     },
-    // 把后端自定的 spec 对象转成可渲染的行；未知 key 也照常显示
+    // 把后端自定的 spec 对象转成可渲染的键值行；未知 key 也照常显示（label 退回原始 key）
     specEntries(spec) {
       if (!spec || typeof spec !== 'object') return []
-      return Object.entries(spec).map(([key, value]) => ({
-        key,
-        label: SPEC_LABEL[key] || key,
-        value: SPEC_UNIT[key] ? `${value} ${SPEC_UNIT[key]}` : String(value)
-      }))
+      const rows = Object.entries(spec)
+        .filter(([key, value]) => !SPEC_NOT_ROW.has(key) && value !== null && value !== undefined && !Array.isArray(value) && typeof value !== 'object')
+        .map(([key, value]) => ({
+          key,
+          label: SPEC_LABEL[key] || key,
+          value: this.specValueText(key, value)
+        }))
+      // 按固定顺序展示，未知 key 排最后
+      const idx = k => {
+        const i = SPEC_ORDER.indexOf(k)
+        return i === -1 ? SPEC_ORDER.length : i
+      }
+      return rows.sort((a, b) => idx(a.key) - idx(b.key))
+    },
+
+    /** 规格值文本：枚举词翻译成中文，需要时补单位 */
+    specValueText(key, value) {
+      if (typeof value === 'string') {
+        const hit = SPEC_VALUE_TEXT[value.trim().toLowerCase()]
+        if (hit) return hit
+      }
+      return SPEC_UNIT[key] ? `${value} ${SPEC_UNIT[key]}` : String(value)
+    },
+
+    /**
+     * 卖点标签（spec.highlights 数组）。
+     * 云电脑的卖点是「4 核 CPU / 8 GB 内存 / 64 GB 磁盘」，与上面的规格行完全重复 → 自动去掉，
+     * 避免同一张卡里出现两遍；云手机的卖点是「独立云手机 / 720P 流畅画面 / 支持群控多开」→ 保留。
+     */
+    highlightsOf(spec) {
+      if (!spec || !Array.isArray(spec.highlights)) return []
+      const specVals = Object.entries(spec)
+        .filter(([k, v]) => !SPEC_NOT_ROW.has(k) && (typeof v === 'string' || typeof v === 'number'))
+        .map(([k, v]) => normText(this.specValueText(k, v)))
+        .filter(v => v.length >= 2)
+      return spec.highlights
+        .filter(h => typeof h === 'string' && h.trim())
+        .filter(h => {
+          const nh = normText(h)
+          return !specVals.some(v => nh.includes(v))
+        })
+    },
+
+    /** 说明文字（spec.details 数组）：一行小字，多条用 · 连接 */
+    detailsOf(spec) {
+      if (!spec || !Array.isArray(spec.details)) return ''
+      return spec.details
+        .filter(d => typeof d === 'string' && d.trim())
+        .join(' · ')
     },
     onBuy(p) {
       // 钱包冻结时不给任何下单入口（文档要求：冻结态禁用所有支付入口）
@@ -590,7 +676,6 @@ export default {
 
 /* 规格 */
 .spec {
-  flex: 1;
   padding: var(--s-2) 0;
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
@@ -615,8 +700,43 @@ export default {
   white-space: nowrap;
 }
 
-/* 价格（A 方案）：数字当主角，等宽紧字距 */
+/* 卖点标签（spec.highlights）：浅色底的小标签，与规格行区分开 */
+.hl {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: var(--s-2) 0 0;
+  margin-top: auto;
+}
+.hl-tag {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 9px;
+  border-radius: var(--r-pill);
+  background: var(--brand-weak);
+  color: var(--brand);
+  font-size: var(--font-xs);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* 说明（spec.details）：一行灰色小字，过长裁掉，保证卡片高度一致 */
+.spec-detail {
+  margin: 8px 0 0;
+  font-size: var(--font-xs);
+  line-height: 1.5;
+  color: var(--ink-3);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* 价格（A 方案）：数字当主角，等宽紧字距；用 margin-top:auto 把价格+按钮压到卡片底部，
+   这样不同 SKU 规格行数不一致时，同一行的按钮仍然对齐 */
 .price {
+  margin-top: auto;
   display: flex;
   align-items: baseline;
   flex-wrap: wrap; /* 窄卡片放不下时整体换行，而不是把文字挤断 */
