@@ -37,7 +37,10 @@ export default defineConfig({
         '**/*~RF*',
         '**/*.swp',
         '**/*.swx',
-        '**/*.bak'
+        '**/*.bak',
+        // 桌面端子工程（Electron）：release/ 里有被系统锁住的 exe（elevate.exe 等），
+        // watcher 抓到会 EBUSY 直接把 dev server 搞崩；它也不需要参与前端热更新
+        '**/desktop/**'
       ]
     },
     proxy: {

@@ -1,0 +1,62 @@
+{
+  "name": "cloud-portal-desktop",
+  "productName": "云平台统一门户",
+  "version": "0.1.0",
+  "private": true,
+  "description": "云平台统一门户 · Windows 桌面端（iPad 平板排版，1180×820）",
+  "main": "main.js",
+  "author": "云平台统一门户",
+  "license": "UNLICENSED",
+  "scripts": {
+    "start": "electron .",
+    "dev": "set DESKTOP_DEV=1&& electron .",
+    "smoke": "electron . --smoke",
+    "pack": "node scripts/pack.js --dir",
+    "build:win": "node scripts/pack.js"
+  },
+  "devDependencies": {
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.cloud.portal.user",
+    "productName": "云平台统一门户",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "server.js",
+      "config.js",
+      "build/icon.png"
+    ],
+    "extraResources": [
+      {
+        "from": "../dist",
+        "to": "dist"
+      }
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "icon": "build/icon.png",
+      "artifactName": "CloudPortal-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "云平台统一门户",
+      "artifactName": "云平台统一门户-Setup-${version}.${ext}"
+    },
+    "portable": {
+      "artifactName": "云平台统一门户-${version}-portable.${ext}"
+    }
+  }
+}
