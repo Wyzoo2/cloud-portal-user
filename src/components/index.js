@@ -6,6 +6,8 @@ export { default as EmptyState } from './EmptyState.vue'
 export { default as LoadingBox } from './LoadingBox.vue'
 export { default as AmountInput } from './AmountInput.vue'
 export { default as PagedTable } from './PagedTable.vue'
+// 分页器（方案 C · 极紧凑）：区间 + 条数 + ‹ 当前页/总页 ›
+export { default as Pager } from './Pager.vue'
 // 内页版式公共件（方案 1 结构 + 方案 3 大标题）
 export { default as PageBand } from './PageBand.vue'
 export { default as Panel } from './Panel.vue'

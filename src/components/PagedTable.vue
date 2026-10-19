@@ -37,11 +37,16 @@
       </slot>
     </template>
 
-    <!-- 分页：移动端去掉 sizes 选择器（375px 放不下会挤爆），并夹住 size 上限 -->
-    <div v-if="total > 0" class="pager">
-      <el-pagination background :layout="pagerLayout"
-        :current-page="page" :page-size="safeSize" :page-sizes="safePageSizes" :total="total"
-        @current-change="onPageChange" @size-change="onSizeChange" />
+    <!-- 分页（方案 C · 极紧凑）：区间 + 条数 + ‹ 当前页/总页 ›，见 components/Pager.vue -->
+    <div v-if="total > 0" class="pager-wrap">
+      <Pager
+        :total="total"
+        :page="page"
+        :size="safeSize"
+        :page-sizes="safePageSizes"
+        @page-change="onPageChange"
+        @size-change="onSizeChange"
+      />
     </div>
   </div>
 </template>
@@ -49,10 +54,11 @@
 <script>
 import { useIsMobile } from '../utils/breakpoint'
 import EmptyState from './EmptyState.vue'
+import Pager from './Pager.vue'
 
 export default {
   name: 'PagedTable',
-  components: { EmptyState },
+  components: { EmptyState, Pager },
   props: {
     // [{ key, label, width?, minWidth?, align?, formatter?(row, value, col) }]
     columns: { type: Array, required: true },
@@ -80,10 +86,6 @@ export default {
     safeSize() {
       const n = Number(this.size) || 20
       return Math.min(Math.max(1, n), 100)
-    },
-    // 375px 宽度放不下 sizes 选择器，移动端只留翻页
-    pagerLayout() {
-      return this.isMobile ? 'prev, pager, next' : 'total, sizes, prev, pager, next'
     }
   },
   methods: {
@@ -133,21 +135,9 @@ export default {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.pager {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: var(--s-4);
-}
-@media (max-width: 768px) {
-  .pager {
-    justify-content: center;
-  }
-  /* 触控目标 ≥44px（移动端分页器） */
-  .pager :deep(.el-pagination button),
-  .pager :deep(.el-pager li) {
-    min-width: 44px;
-    height: 44px;
-    line-height: 44px;
-  }
+/* 分页区：间距交给 Pager 自己的内边距（14px 上下），这里不再叠加外边距，
+   否则表格底线到分页文字会出现 30px 的空白，看着像没对齐 */
+.pager-wrap {
+  margin-top: 0;
 }
 </style>

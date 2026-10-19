@@ -295,17 +295,7 @@ a {
 .el-table__inner-wrapper::before {
   display: none; /* 去掉 EP 默认的底部粗线，只用行发丝线 */
 }
-/* 分页器：紧凑、等宽数字 */
-.el-pagination {
-  --el-pagination-font-size: 13px;
-  font-variant-numeric: tabular-nums;
-  font-weight: 400;
-}
-.el-pagination.is-background .el-pager li,
-.el-pagination.is-background .btn-prev,
-.el-pagination.is-background .btn-next {
-  border-radius: var(--r-sm);
-}
+/* 分页器样式在 components/Pager.vue（方案 C · 极紧凑），这里不再覆盖 Element Plus 分页 */
 /* 下拉/弹窗/抽屉统一圆角与发丝线 */
 .el-dialog,
 .el-drawer,
