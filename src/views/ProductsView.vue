@@ -81,7 +81,7 @@
               <div class="price">
                 <template v-if="p.billing_mode === 1">
                   <AmountText :cents="p.price_cents" size="lg" strong />
-                  <span class="unit">/ {{ p.period_days }} 天</span>
+                  <span v-if="periodLabel(p)" class="unit">/ {{ periodLabel(p) }}</span>
                 </template>
                 <template v-else>
                   <span class="metered">后付费</span>
@@ -144,7 +144,7 @@
           <span class="dlg-k">单价</span>
           <span class="dlg-v">
             <template v-if="current.billing_mode === 1">
-              <AmountText :cents="current.price_cents" /> / {{ current.period_days }} 天
+              <AmountText :cents="current.price_cents" /><template v-if="periodLabel(current)"> / {{ periodLabel(current) }}</template>
             </template>
             <template v-else>后付费（本次开通 0 元）</template>
           </span>
@@ -310,6 +310,25 @@ export default {
     },
     lineName(code) {
       return productLineName(code)
+    },
+    /**
+     * 计费周期展示（依据《16-计费周期单位变更》）：
+     * 优先 period_hours（单位=小时），回退 period_days（单位=天）。
+     * 两个字段是**并列的两种表达**，不是同义的两种格式 —— 不要拿 period_days 反算小时。
+     * 规则：能被 24 整除显示「N 天」，否则显示「N 小时」（720 → 30 天，3 → 3 小时）。
+     * 返回空串表示按量计费或周期缺失，调用方据此决定要不要渲染「/ xxx」。
+     */
+    periodLabel(item) {
+      const toNum = v => (v === null || v === undefined || v === '' ? null : Number(v))
+      const hours = toNum(item && item.period_hours)
+      if (hours !== null && !Number.isNaN(hours) && hours > 0) {
+        return hours % 24 === 0 ? `${hours / 24} 天` : `${hours} 小时`
+      }
+      const days = toNum(item && item.period_days)
+      if (days !== null && !Number.isNaN(days) && days > 0) {
+        return `${days} 天`
+      }
+      return ''
     },
     isSoldOut(p) {
       // stock 可能是 null（不限/未上报）、数字或字符串数字；只有明确为 0 才算售罄
