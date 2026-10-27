@@ -12,6 +12,7 @@ import AppLayout from '../components/AppLayout.vue'
 
 const LoginView = () => import('../views/LoginView.vue')
 const RegisterView = () => import('../views/RegisterView.vue')
+const ForcePasswordView = () => import('../views/ForcePasswordView.vue')
 const HomeView = () => import('../views/HomeView.vue')
 const ProductsView = () => import('../views/ProductsView.vue')
 const OrdersView = () => import('../views/OrdersView.vue')
@@ -26,6 +27,8 @@ export const router = createRouter({
   routes: [
     { path: '/login', name: 'login', component: LoginView, meta: { public: true } },
     { path: '/register', name: 'register', component: RegisterView, meta: { public: true } },
+    // 首登强制改密：不挂在 AppLayout 下，改完才能进站
+    { path: '/password/change', name: 'force-password', component: ForcePasswordView, meta: { title: '修改密码' } },
     {
       path: '/',
       component: AppLayout,
@@ -43,8 +46,8 @@ export const router = createRouter({
         { path: 'wallet', redirect: '/account' },
         { path: 'profile', redirect: '/account' },
         { path: 'wallet/transactions', name: 'transactions', component: TransactionsView, meta: { title: '消费流水', darkHero: true } },
-        { path: 'wallet/recharge', name: 'recharge', component: RechargeView, meta: { title: '充值申请', darkHero: true } },
-        { path: 'wallet/recharges', name: 'recharges', component: RechargesView, meta: { title: '充值记录', darkHero: true } }
+        { path: 'wallet/recharge', name: 'recharge', component: RechargeView, meta: { title: '充值申请', darkHero: true, recharge: true } },
+        { path: 'wallet/recharges', name: 'recharges', component: RechargesView, meta: { title: '充值记录', darkHero: true, recharge: true } }
       ]
     },
     { path: '/:pathMatch(.*)*', redirect: '/' }
@@ -55,9 +58,19 @@ router.beforeEach(to => {
   // 受保护页（无 meta.public）未登录 → 去登录，并带上回跳地址
   if (!to.meta.public && !storage.token)
     return { name: 'login', query: { redirect: to.fullPath } }
+  // 首登未改密：除改密页外一律拦回（后端只放行改密接口，前端也不让逛）
+  if (storage.token && storage.user?.must_change_password && to.name !== 'force-password')
+    return { name: 'force-password' }
+  // 企业普通成员没有充值入口（enterprise_role=0），直接访问充值页回账户中心
+  if (to.meta.recharge && !canRecharge(storage.user)) return { name: 'account' }
   // 已登录访问登录页 → 优先回 redirect 指的地方（只认站内路径），否则回首页
   if (to.name === 'login' && storage.token)
     return to.query.redirect && String(to.query.redirect).startsWith('/')
       ? to.query.redirect
       : { name: 'home' }
 })
+
+/** 企业普通成员（user_type=1 且 enterprise_role=0）不能自助充值 */
+function canRecharge(user) {
+  return !(Number(user?.user_type) === 1 && Number(user?.enterprise_role) === 0)
+}

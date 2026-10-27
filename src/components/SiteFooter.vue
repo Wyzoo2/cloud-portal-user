@@ -22,7 +22,7 @@
 
       <nav class="links">
         <router-link v-for="m in menu" :key="m.path" :to="m.path">{{ m.label }}</router-link>
-        <router-link to="/wallet/recharge">充值</router-link>
+        <router-link v-if="canRecharge" to="/wallet/recharge">充值</router-link>
         <router-link to="/wallet/transactions">消费流水</router-link>
       </nav>
     </div>
@@ -34,7 +34,9 @@
 </template>
 
 <script>
+import { mapState } from 'pinia'
 import { APP_MENU } from '../utils/constants'
+import { useUserStore } from '../store'
 
 export default {
   name: 'SiteFooter',
@@ -47,6 +49,10 @@ export default {
   },
   data() {
     return { menu: APP_MENU }
+  },
+  computed: {
+    // 企业普通成员没有充值入口
+    ...mapState(useUserStore, ['canRecharge'])
   }
 }
 </script>

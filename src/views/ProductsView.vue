@@ -265,7 +265,7 @@ export default {
     }
   },
   computed: {
-    ...mapState(useUserStore, ['user', 'balance', 'isFrozen']),
+    ...mapState(useUserStore, ['user', 'balance', 'isFrozen', 'canRecharge']),
     loggedIn() {
       return !!this.user
     },
@@ -504,6 +504,11 @@ export default {
         }
       }
       if (code === 3001) {
+        // 企业普通成员没有充值入口，只能找管理员
+        if (!this.canRecharge) {
+          ElMessage.warning('余额不足，请联系企业管理员分配余额')
+          return
+        }
         ElMessageBox.confirm('钱包余额不足，是否去充值？', '余额不足', {
           confirmButtonText: '去充值',
           cancelButtonText: '再想想',

@@ -157,9 +157,13 @@ export default {
 :deep(.el-form-item) {
   margin-bottom: 12px;
 }
+/* 校验提示：改成流式，避免绝对定位压到下一个输入框 */
 :deep(.el-form-item__error) {
-  padding-top: 4px;
-  font-size: 11px;
+  position: static;
+  margin-top: 5px;
+  padding: 0 0 0 16px;
+  font-size: 11.5px;
+  line-height: 1.45;
 }
 :deep(.el-input__wrapper) {
   height: 46px;

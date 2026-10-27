@@ -121,6 +121,7 @@ export default {
   },
   created() {
     if (this.$route.query.expired) this.notice = '登录已过期，请重新登录'
+    if (this.$route.query.changed) this.notice = '密码已修改，请用新密码登录'
     if (this.$route.query.entry === 'enterprise') this.entry = 'enterprise'
   },
   methods: {
@@ -153,10 +154,10 @@ export default {
           ? await store.loginEnterprise(this.form.username, this.form.password)
           : await store.login(this.form.username, this.form.password)
 
-        // 首次登录须先改密
-        if (res && res.user && res.user.must_change_password) {
-          ElMessage.warning('首次登录，请先修改密码')
-          this.$router.push('/account')
+        // 首次登录须先改密（后端只放行改密接口）
+        if (res && (res.user?.must_change_password || res.must_change_password)) {
+          ElMessage.warning('首次登录，请先修改初始密码')
+          this.$router.replace({ name: 'force-password' })
           return
         }
 
@@ -209,9 +210,13 @@ export default {
 :deep(.el-form-item) {
   margin-bottom: 12px;
 }
+/* 校验提示：改成流式，避免绝对定位压到下一个输入框 */
 :deep(.el-form-item__error) {
-  padding-top: 4px;
-  font-size: 11px;
+  position: static;
+  margin-top: 5px;
+  padding: 0 0 0 16px;
+  font-size: 11.5px;
+  line-height: 1.45;
 }
 :deep(.el-input__wrapper) {
   height: 46px;

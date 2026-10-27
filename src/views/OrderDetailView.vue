@@ -205,7 +205,7 @@ export default {
     }
   },
   computed: {
-    ...mapState(useUserStore, ['isFrozen']),
+    ...mapState(useUserStore, ['isFrozen', 'canRecharge']),
     items() {
       return (this.order && this.order.items) || []
     },
@@ -393,11 +393,17 @@ export default {
         balance = 0
       }
       const gap = Math.max(0, this.dueCents - balance)
-      ElMessageBox.confirm(
-        `钱包余额不足${gap > 0 ? `，还差 ${formatCents(gap)}` : ''}。是否现在去充值？`,
-        '余额不足',
-        { confirmButtonText: '去充值', cancelButtonText: '稍后再说', type: 'warning' }
-      )
+      const short = `钱包余额不足${gap > 0 ? `，还差 ${formatCents(gap)}` : ''}`
+      // 企业普通成员没有充值入口，只能找管理员
+      if (!this.canRecharge) {
+        ElMessageBox.alert(`${short}，请联系企业管理员分配余额。`, '余额不足', { type: 'warning' }).catch(() => {})
+        return
+      }
+      ElMessageBox.confirm(`${short}。是否现在去充值？`, '余额不足', {
+        confirmButtonText: '去充值',
+        cancelButtonText: '稍后再说',
+        type: 'warning'
+      })
         .then(() => this.$router.push('/wallet/recharge'))
         .catch(() => {})
     },

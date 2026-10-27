@@ -35,15 +35,16 @@
               <el-button link type="primary" @click="reload">重新加载</el-button>
             </div>
             <div class="bal-acts">
-              <el-button type="primary" @click="$router.push('/wallet/recharge')">去充值</el-button>
+              <el-button v-if="canRecharge" type="primary" @click="$router.push('/wallet/recharge')">去充值</el-button>
               <el-button @click="$router.push('/wallet/transactions')">消费流水</el-button>
-              <el-button @click="$router.push('/wallet/recharges')">充值记录</el-button>
+              <el-button v-if="canRecharge" @click="$router.push('/wallet/recharges')">充值记录</el-button>
             </div>
+            <div v-if="!canRecharge" class="tip">企业员工账号由企业统一充值，余额由企业管理员分配</div>
           </div>
         </Panel>
 
         <Panel title="常用入口">
-          <button class="entry" @click="$router.push('/wallet/recharge')">
+          <button v-if="canRecharge" class="entry" @click="$router.push('/wallet/recharge')">
             <span class="e-body"><b>充值</b><small>线下转账 + 管理员核销，不是即时到账</small></span>
             <span class="e-arrow">→</span>
           </button>
@@ -51,7 +52,7 @@
             <span class="e-body"><b>消费流水</b><small>每一笔进出明细，可按类型筛选</small></span>
             <span class="e-arrow">→</span>
           </button>
-          <button class="entry" @click="$router.push('/wallet/recharges')">
+          <button v-if="canRecharge" class="entry" @click="$router.push('/wallet/recharges')">
             <span class="e-body"><b>充值记录</b><small>核销进度与驳回原因</small></span>
             <span class="e-arrow">→</span>
           </button>
@@ -121,8 +122,10 @@
     </div>
 
     <SiteFooter
-      statement="充值走线下转账 + 管理员核销，到账后即可下单开通。"
-      action-text="去充值"
+      :statement="canRecharge
+        ? '充值走线下转账 + 管理员核销，到账后即可下单开通。'
+        : '企业员工账号由企业统一充值，余额与配额由企业管理员分配。'"
+      :action-text="canRecharge ? '去充值' : ''"
       action-to="/wallet/recharge"
     />
   </div>
@@ -183,7 +186,7 @@ export default {
     }
   },
   computed: {
-    ...mapState(useUserStore, ['user', 'balance', 'balanceError', 'isFrozen']),
+    ...mapState(useUserStore, ['user', 'balance', 'balanceError', 'isFrozen', 'canRecharge']),
     frozen() {
       return this.isFrozen
     },

@@ -15,6 +15,16 @@ export const useUserStore = defineStore('user', () => {
   // 钱包冻结：页头标识、支付/下单入口禁用都读它（status 可能是字符串，做一次数字归一）
   const isFrozen = computed(() => Number(balance.value && balance.value.status) === 1)
 
+  /**
+   * 企业普通成员：user_type=1 且 enterprise_role=0（1 是企业管理员，他是付费方）。
+   * 这类账号不能自助充值，入口由页面按 canRecharge 收起。
+   */
+  const isEnterpriseMember = computed(() => {
+    const u = user.value
+    return Number(u && u.user_type) === 1 && Number(u && u.enterprise_role) === 0
+  })
+  const canRecharge = computed(() => !isEnterpriseMember.value)
+
   function setUser(u) {
     user.value = u
     storage.user = u
@@ -136,6 +146,7 @@ export const useUserStore = defineStore('user', () => {
 
   return {
     user, balance, balanceError, isFrozen,
+    isEnterpriseMember, canRecharge,
     setUser,
     login, loginEnterprise,
     register, registerEnterprise,

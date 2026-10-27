@@ -329,6 +329,12 @@ export default {
   color: var(--ink-3);
   padding-bottom: 4px;
 }
+:deep(.el-form-item__error) {
+  position: static;
+  margin-top: 4px;
+  font-size: 11.5px;
+  line-height: 1.45;
+}
 /* 输入框：灰底 + 品牌聚焦环 */
 :deep(.el-input__wrapper) {
   height: 40px;
