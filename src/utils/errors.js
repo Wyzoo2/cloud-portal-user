@@ -14,6 +14,13 @@ export const ERROR_MESSAGES = {
   2002: '手机号已注册',
   2003: '账号或密码错误',
   2004: '账号已被禁用',
+  // ── 企业版权限（模块 24 · 流程图④，后端按此码段实现）──
+  2006: '账号类型与登录入口不匹配，请切换登录入口',
+  2007: '企业不存在或已停用',
+  2011: '企业注册待审核，请等待平台审核通过',
+  2012: '企业注册已被驳回',
+  2013: '企业编码已存在',
+  2014: '企业管理员账号已被占用',
   3001: '余额不足',
   3002: '钱包已冻结，请联系平台',
   3004: '退款金额超出可退余额',
@@ -55,4 +62,44 @@ export function toastError(e) {
   const list = errorList(e)
   if (!list.length) return
   list.forEach(msg => ElMessage.error(msg))
+}
+
+/** 登录 / 注册页错误：按码给视觉与后续动作（type / items / field / switchEntry） */
+export function authError(e) {
+  const code = Number(e && e.code)
+  const rawMsg = e && typeof e.message === 'string' ? e.message.trim() : ''
+
+  // 非业务码（路由不存在 / 后端未起）统一换成可执行的说法
+  if (!Number.isFinite(code)) {
+    if (/Cannot (POST|GET|PUT|DELETE)/i.test(rawMsg)) {
+      return { type: 'warning', items: ['该功能接口尚未开放，请联系平台代为开通或稍后再试'] }
+    }
+    return { type: 'error', items: [rawMsg || '请求失败，请稍后重试'] }
+  }
+
+  if (code === 2006) {
+    return { type: 'warning', items: [ERROR_MESSAGES[2006]], switchEntry: true }
+  }
+  if (code === 2011) {
+    // 后端 message 更具体时优先
+    return { type: 'warning', items: [rawMsg || ERROR_MESSAGES[2011]] }
+  }
+  if (code === 2012) {
+    return {
+      type: 'error',
+      items: [rawMsg ? `企业注册已被驳回：${rawMsg}` : `${ERROR_MESSAGES[2012]}，请联系平台了解原因`]
+    }
+  }
+  if (code === 2013) return { type: 'error', items: [ERROR_MESSAGES[2013]], field: 'code' }
+  if (code === 2014) return { type: 'error', items: [ERROR_MESSAGES[2014]], field: 'admin_username' }
+  if (code === 2007) {
+    return { type: 'error', items: [rawMsg || ERROR_MESSAGES[2007]] }
+  }
+  if (code === 'NO_ENTERPRISE') {
+    return { type: 'error', items: [rawMsg || '该账号未归属企业，请联系企业管理员'] }
+  }
+  if (code === 'NOT_READY') {
+    return { type: 'warning', items: [rawMsg || '该接口尚未开放，请联系平台'] }
+  }
+  return { type: 'error', items: errorList(e) }
 }

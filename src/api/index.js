@@ -9,6 +9,10 @@ export const api = {
   // 认证
   register: payload => http.post('/auth/register', payload),
   login: (username, password) => http.post('/auth/login', { username, password }),
+  // 企业员工登录：后端暂无独立接口，与个人共用 /auth/login（入口校验在前端）
+  loginEnterprise: (username, password) => http.post('/auth/login', { username, password }),
+  // 企业自助注册（C 端免登录）：企业与管理员账号一并建出，初始 status = pending
+  registerEnterprise: payload => http.post('/enterprise/register', payload),
   // logout 需要 Bearer：前端先清本地 token，所以把存下的 token 显式传进来
   logout: token => {
     const headers = token ? { Authorization: 'Bearer ' + token } : {}

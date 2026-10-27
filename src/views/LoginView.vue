@@ -1,95 +1,170 @@
 <template>
-  <div class="auth">
-    <div class="auth-panel">
-      <!-- 左侧品牌区 -->
-      <div class="brand-side">
-        <div class="brand-logo">
-          <span class="mark">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"
-                stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
-          </span>
-          云平台统一门户
-        </div>
-        <h2>一个账号，<br />畅享云端资源</h2>
-        <p>统一账号、统一钱包，云存储 / 云手机 / 云电脑 一站租齐。</p>
-        <div class="brand-tags">
-          <span>秒级开通</span>
-          <span>一个钱包</span>
-          <span>安全隔离</span>
-        </div>
-      </div>
-
-      <!-- 右侧表单区 -->
-      <div class="form-side">
-        <h1>欢迎回来</h1>
-        <p class="sub">登录你的云平台账号</p>
-        <el-alert v-if="notice" class="alert" :title="notice" type="warning" :closable="false" show-icon />
-        <el-form ref="formRef" :model="form" :rules="rules" @submit.prevent="onLogin">
-          <el-form-item prop="username">
-            <el-input v-model="form.username" placeholder="用户名 / 手机号" size="large" clearable />
-          </el-form-item>
-          <el-form-item prop="password">
-            <el-input v-model="form.password" type="password" placeholder="密码" size="large" show-password />
-          </el-form-item>
-          <el-button class="submit" type="primary" size="large" native-type="submit" :loading="loading">
-            登录
-          </el-button>
-          <!-- 1001 是字符串数组：逐条展示，不要合并成一句 -->
-          <el-alert v-for="(msg, i) in errors" :key="i" class="alert" :title="msg" type="error"
-            :closable="false" show-icon />
-        </el-form>
-        <div class="foot">
-          还没有账号？<router-link to="/register">立即注册</router-link>
-        </div>
-      </div>
+  <AuthShell :subtitle="isEnterprise ? '企业员工登录 · 由企业管理员开通' : '统一账号 · 统一钱包'">
+    <!-- 两个入口：个人 / 企业员工 -->
+    <div class="seg" role="tablist" aria-label="登录入口">
+      <button
+        v-for="e in entries"
+        :key="e.value"
+        type="button"
+        role="tab"
+        class="seg-item"
+        :class="{ on: entry === e.value }"
+        :aria-selected="entry === e.value"
+        @click="switchEntry(e.value)"
+      >
+        {{ e.label }}
+      </button>
     </div>
-  </div>
+
+    <el-alert v-if="notice" class="notice" :title="notice" type="warning" :closable="false" show-icon />
+
+    <el-form ref="formRef" :model="form" :rules="rules" @submit.prevent="onLogin">
+      <el-form-item prop="username">
+        <el-input
+          v-model="form.username"
+          :placeholder="isEnterprise ? '企业管理员分配的账号' : '用户名或手机号'"
+          size="large"
+          clearable
+          autocomplete="username"
+        >
+          <template #prefix>
+            <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+              stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="8.5" r="3.6" /><path d="M4.8 20c.9-3.4 3.8-5.4 7.2-5.4s6.3 2 7.2 5.4" />
+            </svg>
+          </template>
+        </el-input>
+      </el-form-item>
+
+      <el-form-item prop="password">
+        <el-input
+          v-model="form.password"
+          type="password"
+          placeholder="密码"
+          size="large"
+          show-password
+          autocomplete="current-password"
+          @keyup.enter="onLogin"
+        >
+          <template #prefix>
+            <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+              stroke-linecap="round" stroke-linejoin="round">
+              <rect x="4.5" y="10" width="15" height="10" rx="2.4" /><path d="M8.2 10V7.6a3.8 3.8 0 0 1 7.6 0V10" />
+            </svg>
+          </template>
+        </el-input>
+      </el-form-item>
+
+      <el-button class="submit" type="primary" native-type="submit" :loading="loading">
+        {{ isEnterprise ? '登录企业账号' : '登录' }}
+      </el-button>
+    </el-form>
+
+    <!-- 错误：一行文案 + 需要时给"切换入口"的动作 -->
+    <div v-if="error.items.length" class="alerts">
+      <el-alert
+        v-for="(msg, i) in error.items"
+        :key="i"
+        :title="msg"
+        :type="error.type"
+        :closable="false"
+        show-icon
+      />
+      <el-button v-if="error.switchEntry" class="switch-btn" size="small" @click="flipEntry">
+        切换到{{ isEnterprise ? '个人登录' : '企业员工登录' }}
+      </el-button>
+    </div>
+
+    <!-- 底部链接 -->
+    <nav class="links">
+      <router-link to="/register">注册账号</router-link>
+      <span class="dot">·</span>
+      <button type="button" class="link-btn" @click="openEnterprise = true">企业注册</button>
+    </nav>
+
+    <EnterpriseRegisterDrawer v-model="openEnterprise" @go-enterprise-login="onEnterpriseReady" />
+  </AuthShell>
 </template>
 
 <script>
 // ElMessage 由 unplugin-auto-import 按需注入（见 vite.config.js）
 import { useUserStore } from '../store'
-import { errorList } from '../utils/errors'
+import { authError } from '../utils/errors'
+import AuthShell from '../components/AuthShell.vue'
+import EnterpriseRegisterDrawer from '../components/EnterpriseRegisterDrawer.vue'
 
 export default {
   name: 'LoginView',
+  components: { AuthShell, EnterpriseRegisterDrawer },
   data() {
     return {
+      entry: 'personal',
+      entries: [
+        { value: 'personal', label: '个人登录' },
+        { value: 'enterprise', label: '企业员工' }
+      ],
       form: { username: '', password: '' },
       rules: {
         username: [{ required: true, message: '请输入用户名或手机号', trigger: 'blur' }],
         password: [{ required: true, message: '请输入密码', trigger: 'blur' }]
       },
       loading: false,
-      errors: [],
-      notice: ''
+      notice: '',
+      error: { type: 'error', items: [] },
+      openEnterprise: false
+    }
+  },
+  computed: {
+    isEnterprise() {
+      return this.entry === 'enterprise'
     }
   },
   created() {
-    // token 失效被踢回登录时，带 expired 参数提示用户
     if (this.$route.query.expired) this.notice = '登录已过期，请重新登录'
+    if (this.$route.query.entry === 'enterprise') this.entry = 'enterprise'
   },
   methods: {
+    switchEntry(value) {
+      if (this.entry === value) return
+      this.entry = value
+      this.error = { type: 'error', items: [] }
+      this.notice = ''
+    },
+    flipEntry() {
+      this.switchEntry(this.isEnterprise ? 'personal' : 'enterprise')
+    },
+    /** 企业注册成功 → 切到企业员工入口并回填账号 */
+    onEnterpriseReady(username) {
+      this.switchEntry('enterprise')
+      if (username) this.form.username = username
+    },
     async onLogin() {
-      // 防重复提交：validate() 是异步的，等它返回再置 loading 会留下一个空窗期，
-      // 用户快速双击就会发两次登录请求 —— 守卫和 loading 必须放在最前面
+      // 防重复提交：loading 守卫必须在 validate() 之前
       if (this.loading) return
       this.loading = true
       try {
         const valid = await this.$refs.formRef.validate().catch(() => false)
         if (!valid) return
-        this.errors = []
-        await useUserStore().login(this.form.username, this.form.password)
+        this.error = { type: 'error', items: [] }
+        this.notice = ''
+
+        const store = useUserStore()
+        const res = this.isEnterprise
+          ? await store.loginEnterprise(this.form.username, this.form.password)
+          : await store.login(this.form.username, this.form.password)
+
+        // 首次登录须先改密
+        if (res && res.user && res.user.must_change_password) {
+          ElMessage.warning('首次登录，请先修改密码')
+          this.$router.push('/account')
+          return
+        }
+
         ElMessage.success('登录成功')
         const redirect = this.$route.query.redirect
-        this.$router.push(
-          redirect && String(redirect).startsWith('/') ? redirect : '/'
-        )
+        this.$router.push(redirect && String(redirect).startsWith('/') ? redirect : '/')
       } catch (e) {
-        // 2003 账密错误 / 2004 禁用 / 1001 参数；1001 的多条会逐条渲染成多条 alert
-        this.errors = errorList(e)
+        this.error = authError(e)
       } finally {
         this.loading = false
       }
@@ -99,124 +174,123 @@ export default {
 </script>
 
 <style scoped>
-.auth {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-  background:
-    radial-gradient(800px 420px at 85% -10%, rgba(51, 214, 255, 0.16), transparent),
-    radial-gradient(700px 420px at 0% 0%, rgba(29, 59, 214, 0.34), transparent),
-    var(--bg-dark);
-}
-.auth-panel {
+/* 入口切换 */
+.seg {
   display: grid;
-  grid-template-columns: 1fr 1.15fr;
-  width: 100%;
-  max-width: 880px;
-  background: var(--bg-0);
-  border: 1px solid var(--line);
-  border-radius: var(--r-xl);
-  overflow: hidden;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px;
+  padding: 3px;
+  margin: 18px 0 14px;
+  background: var(--bg-1);
+  border-radius: 999px;
 }
-.brand-side {
-  padding: 52px 44px;
-  color: #fff;
-  background:
-    radial-gradient(420px 320px at 100% 0%, rgba(51, 214, 255, 0.16), transparent),
-    linear-gradient(160deg, var(--bg-dark), var(--bg-dark-2));
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+.seg-item {
+  height: 32px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  font-family: inherit;
+  font-size: 12.5px;
+  color: var(--ink-3);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
 }
-.brand-logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-weight: 600;
-  font-size: 18px;
-  margin-bottom: 28px;
-}
-.brand-logo .mark {
-  width: 34px;
-  height: 34px;
-  border-radius: var(--r-md);
-  background: var(--accent-gradient);
-  display: grid;
-  place-items: center;
-  color: #fff;
-}
-.brand-side h2 {
-  font-size: 30px;
-  line-height: 1.3;
-  margin: 0 0 16px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-}
-.brand-side p {
-  color: rgba(255, 255, 255, 0.58);
-  font-size: 14px;
-  line-height: 1.7;
-  margin: 0 0 26px;
-  max-width: 300px;
-}
-.brand-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.brand-tags span {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  padding: 6px 14px;
-  border-radius: var(--r-pill);
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.85);
-}
-.form-side {
-  padding: 52px 48px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-.form-side h1 {
-  margin: 0;
-  font-size: 26px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
+.seg-item:hover {
   color: var(--ink);
 }
-.form-side .sub {
-  color: var(--ink-3);
-  font-size: 14px;
-  margin: 6px 0 28px;
+.seg-item.on {
+  background: var(--bg-0);
+  color: var(--brand);
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(16, 22, 48, 0.08);
 }
+
+/* 输入框：灰底胶囊 + 图标 */
+:deep(.el-form-item) {
+  margin-bottom: 12px;
+}
+:deep(.el-form-item__error) {
+  padding-top: 4px;
+  font-size: 11px;
+}
+:deep(.el-input__wrapper) {
+  height: 46px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: var(--bg-1);
+  box-shadow: none;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+:deep(.el-input__wrapper:hover) {
+  background: var(--bg-2);
+}
+:deep(.el-input__wrapper.is-focus) {
+  background: var(--bg-0);
+  box-shadow: inset 0 0 0 1px var(--brand);
+}
+:deep(.el-input__inner) {
+  font-size: 14px;
+}
+.ico {
+  width: 17px;
+  height: 17px;
+  color: var(--ink-4);
+  margin-right: 2px;
+}
+
 .submit {
   width: 100%;
+  height: 46px;
+  margin-top: 4px;
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 500;
 }
-.alert {
+
+.notice {
+  margin-bottom: 10px;
+}
+.alerts {
   margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
-.foot {
-  margin-top: 14px;
-  text-align: center;
-  font-size: 13px;
+.switch-btn {
+  align-self: flex-start;
+}
+
+/* 底部链接行 */
+.links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 16px;
+  font-size: 12.5px;
   color: var(--ink-3);
 }
-@media (max-width: 1000px) {
-  .auth {
-    padding: 16px;
-  }
-  .auth-panel {
-    grid-template-columns: 1fr;
-    max-width: 400px;
-  }
-  .brand-side {
-    display: none;
-  }
-  .form-side {
-    padding: 32px 24px;
+.links a,
+.link-btn {
+  color: var(--ink-3);
+  text-decoration: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+}
+.links a:hover,
+.link-btn:hover {
+  color: var(--brand);
+}
+.dot {
+  color: var(--line-2);
+}
+
+@media (max-width: 768px) {
+  .seg-item {
+    height: 38px;
   }
 }
 </style>

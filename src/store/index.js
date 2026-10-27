@@ -30,9 +30,52 @@ export const useUserStore = defineStore('user', () => {
     sessionSeq += 1
     balanceInflight = null
     const res = await api.login(username, password)
+    assertEntry(res, 'personal')
+    applyLoginResult(res)
+    return res
+  }
+
+  // 企业员工登录：入口与账号性质不匹配时按契约返回 2006
+  async function loginEnterprise(username, password) {
+    sessionSeq += 1
+    balanceInflight = null
+    const res = await api.loginEnterprise(username, password)
+    assertEntry(res, 'enterprise')
+    applyLoginResult(res)
+    return res
+  }
+
+  /** 入口与账号性质校验（写入 token 之前） */
+  function assertEntry(res, entry) {
+    const user = (res && res.user) || {}
+    // 旧后端没有 user_type，按个人账号处理
+    const ut = user.user_type == null ? 0 : Number(user.user_type)
+
+    if (entry === 'enterprise' && ut !== 1) {
+      throw { code: 2006, message: '该账号是个人账号，请使用个人登录' }
+    }
+    if (entry === 'personal' && ut === 1) {
+      throw { code: 2006, message: '该账号是企业员工账号，请使用企业员工入口' }
+    }
+    // 企业账号必须有企业归属
+    if (ut === 1 && !user.enterprise_id) {
+      throw { code: 'NO_ENTERPRISE', message: '该账号未归属企业，请联系企业管理员' }
+    }
+  }
+
+  /** 企业自助注册：只提交申请，不自动登录（企业是 pending，登录会 2011） */
+  async function registerEnterprise(payload) {
+    return api.registerEnterprise(payload)
+  }
+
+  /** 登录结果统一落盘：两种入口返回结构一致 { access_token, user } */
+  function applyLoginResult(res) {
+    if (!res || !res.access_token) {
+      // 结构异常不写入，避免被守卫反复弹回登录页
+      throw { code: 'NOT_READY', message: '登录接口返回异常，请稍后重试' }
+    }
     storage.token = res.access_token
     setUser(res.user)
-    return res
   }
 
   /** 注册即登录：接口返回结构同登录 */
@@ -40,8 +83,7 @@ export const useUserStore = defineStore('user', () => {
     sessionSeq += 1
     balanceInflight = null
     const res = await api.register(payload)
-    storage.token = res.access_token
-    setUser(res.user)
+    applyLoginResult(res)
     return res
   }
 
@@ -92,5 +134,11 @@ export const useUserStore = defineStore('user', () => {
     return balanceInflight
   }
 
-  return { user, balance, balanceError, isFrozen, setUser, login, register, logout, refreshBalance }
+  return {
+    user, balance, balanceError, isFrozen,
+    setUser,
+    login, loginEnterprise,
+    register, registerEnterprise,
+    logout, refreshBalance
+  }
 })

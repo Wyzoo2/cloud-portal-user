@@ -211,6 +211,8 @@ body,
 #app {
   height: 100%;
   margin: 0;
+  /* 离场页用 absolute 定位，这里作参照 */
+  position: relative;
 }
 
 body {
@@ -325,20 +327,40 @@ a {
   transform: translateY(0);
 }
 
-/* ── 路由切换过渡（页面淡入上移） ── */
+/* ── 路由切换过渡：纯交叉淡入（不加位移，避免闪滚动条） ── */
 .page-enter-active,
 .page-leave-active {
-  transition:
-    opacity 0.24s cubic-bezier(0.22, 0.61, 0.36, 1),
-    transform 0.24s cubic-bezier(0.22, 0.61, 0.36, 1);
+  transition: opacity 0.22s ease;
 }
-.page-enter-from {
-  opacity: 0;
-  transform: translateY(10px);
+.page-leave-active {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
 }
+.page-enter-from,
 .page-leave-to {
   opacity: 0;
-  transform: translateY(-6px);
+}
+
+/* 异步路由加载占位 */
+.route-loading {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: var(--bg-1);
+}
+.route-loading .dot {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--accent-gradient);
+  animation: route-pulse 0.9s ease-in-out infinite;
+}
+@keyframes route-pulse {
+  0%, 100% { opacity: 0.35; transform: scale(0.9); }
+  50% { opacity: 1; transform: scale(1); }
 }
 
 /* ── 无障碍：尊重系统「减弱动态效果」偏好 ── */
@@ -357,4 +379,13 @@ a {
     opacity: 1;
     transform: none;
   }
+}
+
+/* 企业注册抽屉：抽屉挂在 body 上，scoped 样式够不到，这里清默认内边距 */
+.ent-drawer .el-drawer__body {
+  padding: 0;
+  overflow-y: auto;
+}
+.ent-drawer .el-drawer__header {
+  display: none;
 }

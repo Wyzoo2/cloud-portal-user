@@ -1,99 +1,140 @@
 <template>
-  <div class="auth">
-    <div class="auth-panel">
-      <!-- 左侧品牌区 -->
-      <div class="brand-side">
-        <div class="brand-logo">
-          <span class="mark">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"
-                stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+  <AuthShell subtitle="注册即自动登录，开启云端之旅">
+    <el-form ref="formRef" :model="form" :rules="rules" label-position="top" @submit.prevent="onRegister">
+      <el-form-item prop="username">
+        <el-input v-model="form.username" placeholder="用户名（4-32 位字母、数字、下划线）" size="large" clearable>
+          <template #prefix>
+            <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+              stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="8.5" r="3.6" /><path d="M4.8 20c.9-3.4 3.8-5.4 7.2-5.4s6.3 2 7.2 5.4" />
             </svg>
-          </span>
-          云平台统一门户
-        </div>
-        <h2>一个账号，<br />畅享云端资源</h2>
-        <p>统一账号、统一钱包，云存储 / 云手机 / 云电脑 一站租齐。</p>
-        <div class="brand-tags">
-          <span>秒级开通</span>
-          <span>一个钱包</span>
-          <span>安全隔离</span>
-        </div>
-      </div>
+          </template>
+        </el-input>
+      </el-form-item>
 
-      <!-- 右侧表单区 -->
-      <div class="form-side">
-        <h1>创建账号</h1>
-        <p class="sub">注册即自动登录，开启云端之旅</p>
-        <el-form ref="formRef" :model="form" :rules="rules" @submit.prevent="onRegister">
-          <el-form-item prop="username">
-            <el-input v-model="form.username" placeholder="用户名（4-32 位字母、数字、下划线）" size="large" clearable />
-          </el-form-item>
-          <el-form-item prop="password">
-            <el-input v-model="form.password" type="password" placeholder="密码（8-64 位，需含字母和数字）" size="large" show-password />
-          </el-form-item>
-          <el-form-item prop="phone">
-            <el-input v-model="form.phone" placeholder="手机号（选填）" size="large" clearable />
-          </el-form-item>
-          <el-button class="submit" type="primary" size="large" native-type="submit" :loading="loading">
-            注册
-          </el-button>
-          <!-- 1001 是字符串数组：逐条展示，不合并成一句 -->
-          <el-alert v-for="(msg, i) in errors" :key="i" class="alert" :title="msg" type="error"
-            :closable="false" show-icon />
-        </el-form>
-        <div class="foot">
-          已有账号？<router-link to="/login">去登录</router-link>
-        </div>
-      </div>
+      <el-form-item prop="password">
+        <el-input v-model="form.password" type="password" placeholder="密码（8-64 位，含字母和数字）" size="large" show-password>
+          <template #prefix>
+            <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+              stroke-linecap="round" stroke-linejoin="round">
+              <rect x="4.5" y="10" width="15" height="10" rx="2.4" /><path d="M8.2 10V7.6a3.8 3.8 0 0 1 7.6 0V10" />
+            </svg>
+          </template>
+        </el-input>
+      </el-form-item>
+
+      <el-form-item prop="confirm">
+        <el-input v-model="form.confirm" type="password" placeholder="确认密码" size="large" show-password>
+          <template #prefix>
+            <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+              stroke-linecap="round" stroke-linejoin="round">
+              <rect x="4.5" y="10" width="15" height="10" rx="2.4" /><path d="M8.2 10V7.6a3.8 3.8 0 0 1 7.6 0V10" />
+            </svg>
+          </template>
+        </el-input>
+      </el-form-item>
+
+      <el-form-item prop="phone">
+        <el-input v-model="form.phone" placeholder="手机号（选填）" size="large" clearable>
+          <template #prefix>
+            <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+              stroke-linecap="round" stroke-linejoin="round">
+              <rect x="6.5" y="2.8" width="11" height="18.4" rx="2.2" /><path d="M10.8 18.4h2.4" />
+            </svg>
+          </template>
+        </el-input>
+      </el-form-item>
+
+      <el-button class="submit" type="primary" native-type="submit" :loading="loading">
+        注册并登录
+      </el-button>
+    </el-form>
+
+    <div v-if="error.items.length" class="alerts">
+      <el-alert
+        v-for="(msg, i) in error.items"
+        :key="i"
+        :title="msg"
+        :type="error.type"
+        :closable="false"
+        show-icon
+      />
     </div>
-  </div>
+
+    <nav class="links">
+      <span>已有账号？<router-link to="/login">去登录</router-link></span>
+      <span class="dot">·</span>
+      <button type="button" class="link-btn" @click="openEnterprise = true">企业注册</button>
+    </nav>
+
+    <EnterpriseRegisterDrawer v-model="openEnterprise" @go-enterprise-login="onEnterpriseReady" />
+  </AuthShell>
 </template>
 
 <script>
 // ElMessage 由 unplugin-auto-import 按需注入（见 vite.config.js）
 import { useUserStore } from '../store'
-import { errorList } from '../utils/errors'
+import { authError } from '../utils/errors'
+import AuthShell from '../components/AuthShell.vue'
+import EnterpriseRegisterDrawer from '../components/EnterpriseRegisterDrawer.vue'
+
+const USERNAME_RE = /^[a-zA-Z0-9_]{4,32}$/
+const PASSWORD_RE = /^(?=.*[A-Za-z])(?=.*\d)[\s\S]{8,64}$/
+const PHONE_RE = /^1\d{10}$/
 
 export default {
   name: 'RegisterView',
+  components: { AuthShell, EnterpriseRegisterDrawer },
   data() {
     return {
-      form: { username: '', password: '', phone: '' },
+      form: { username: '', password: '', confirm: '', phone: '' },
       rules: {
         username: [
           { required: true, message: '请输入用户名', trigger: 'blur' },
-          { pattern: /^[a-zA-Z0-9_]{4,32}$/, message: '用户名需为 4-32 位字母、数字或下划线', trigger: 'blur' }
+          { pattern: USERNAME_RE, message: '用户名需为 4-32 位字母、数字或下划线', trigger: 'blur' }
         ],
         password: [
           { required: true, message: '请输入密码', trigger: 'blur' },
-          { pattern: /^(?=.*[A-Za-z])(?=.*\d)[\s\S]{8,64}$/, message: '密码需 8-64 位，且同时包含字母和数字', trigger: 'blur' }
+          { pattern: PASSWORD_RE, message: '密码需 8-64 位，且同时包含字母和数字', trigger: 'blur' }
         ],
-        phone: [
-          {
-            validator: (rule, value, callback) => {
-              if (!value) return callback()
-              if (/^1\d{10}$/.test(value)) return callback()
-              callback(new Error('手机号格式不正确'))
-            },
-            trigger: 'blur'
-          }
-        ]
+        confirm: [{
+          validator: (rule, value, callback) => {
+            if (!value) return callback(new Error('请再次输入密码'))
+            if (value !== this.form.password) return callback(new Error('两次输入的密码不一致'))
+            callback()
+          },
+          trigger: 'blur'
+        }],
+        phone: [{
+          validator: (rule, value, callback) => {
+            if (!value) return callback()
+            if (PHONE_RE.test(value)) return callback()
+            callback(new Error('手机号格式不正确'))
+          },
+          trigger: 'blur'
+        }]
       },
       loading: false,
-      errors: []
+      error: { type: 'error', items: [] },
+      openEnterprise: false
     }
   },
+  created() {
+    // 旧链接 ?entry=enterprise 直接开抽屉
+    if (this.$route.query.entry === 'enterprise') this.openEnterprise = true
+  },
   methods: {
+    /** 企业注册成功 → 去企业员工入口登录 */
+    onEnterpriseReady() {
+      this.$router.push({ path: '/login', query: { entry: 'enterprise' } })
+    },
     async onRegister() {
-      // 防重复提交：validate() 是异步的，等它返回再置 loading 会留下空窗期，
-      // 用户快速双击会重复注册 —— 守卫和 loading 必须放在最前面
       if (this.loading) return
       this.loading = true
       try {
         const valid = await this.$refs.formRef.validate().catch(() => false)
         if (!valid) return
-        this.errors = []
+        this.error = { type: 'error', items: [] }
         await useUserStore().register({
           username: this.form.username,
           password: this.form.password,
@@ -102,8 +143,7 @@ export default {
         ElMessage.success('注册成功，已自动登录')
         this.$router.push('/')
       } catch (e) {
-        // 2001/2002 走错误码映射；1001 的多条错误逐条展示
-        this.errors = errorList(e)
+        this.error = authError(e)
       } finally {
         this.loading = false
       }
@@ -113,124 +153,81 @@ export default {
 </script>
 
 <style scoped>
-.auth {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-  background:
-    radial-gradient(800px 420px at 85% -10%, rgba(51, 214, 255, 0.16), transparent),
-    radial-gradient(700px 420px at 0% 0%, rgba(29, 59, 214, 0.34), transparent),
-    var(--bg-dark);
+/* 输入框：灰底胶囊 + 图标 */
+:deep(.el-form-item) {
+  margin-bottom: 12px;
 }
-.auth-panel {
-  display: grid;
-  grid-template-columns: 1fr 1.15fr;
-  width: 100%;
-  max-width: 880px;
+:deep(.el-form-item__error) {
+  padding-top: 4px;
+  font-size: 11px;
+}
+:deep(.el-input__wrapper) {
+  height: 46px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: var(--bg-1);
+  box-shadow: none;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+:deep(.el-input__wrapper:hover) {
+  background: var(--bg-2);
+}
+:deep(.el-input__wrapper.is-focus) {
   background: var(--bg-0);
-  border: 1px solid var(--line);
-  border-radius: var(--r-xl);
-  overflow: hidden;
+  box-shadow: inset 0 0 0 1px var(--brand);
 }
-.brand-side {
-  padding: 52px 44px;
-  color: #fff;
-  background:
-    radial-gradient(420px 320px at 100% 0%, rgba(51, 214, 255, 0.16), transparent),
-    linear-gradient(160deg, var(--bg-dark), var(--bg-dark-2));
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-.brand-logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-weight: 600;
-  font-size: 18px;
-  margin-bottom: 28px;
-}
-.brand-logo .mark {
-  width: 34px;
-  height: 34px;
-  border-radius: var(--r-md);
-  background: var(--accent-gradient);
-  display: grid;
-  place-items: center;
-  color: #fff;
-}
-.brand-side h2 {
-  font-size: 30px;
-  line-height: 1.3;
-  margin: 0 0 16px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-}
-.brand-side p {
-  color: rgba(255, 255, 255, 0.58);
+:deep(.el-input__inner) {
   font-size: 14px;
-  line-height: 1.7;
-  margin: 0 0 26px;
-  max-width: 300px;
 }
-.brand-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+.ico {
+  width: 17px;
+  height: 17px;
+  color: var(--ink-4);
+  margin-right: 2px;
 }
-.brand-tags span {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  padding: 6px 14px;
-  border-radius: var(--r-pill);
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.85);
-}
-.form-side {
-  padding: 52px 48px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-.form-side h1 {
-  margin: 0;
-  font-size: 26px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  color: var(--ink);
-}
-.form-side .sub {
-  color: var(--ink-3);
-  font-size: 14px;
-  margin: 6px 0 28px;
-}
+
 .submit {
   width: 100%;
+  height: 46px;
+  margin-top: 4px;
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 500;
 }
-.alert {
+
+.alerts {
   margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
-.foot {
-  margin-top: 18px;
-  text-align: center;
-  font-size: 13px;
+
+.links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 16px;
+  font-size: 12.5px;
   color: var(--ink-3);
 }
-@media (max-width: 1000px) {
-  .auth {
-    padding: 16px;
-  }
-  .auth-panel {
-    grid-template-columns: 1fr;
-    max-width: 400px;
-  }
-  .brand-side {
-    display: none;
-  }
-  .form-side {
-    padding: 32px 24px;
-  }
+.links a,
+.link-btn {
+  color: var(--brand);
+  text-decoration: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+}
+.link-btn {
+  color: var(--ink-3);
+}
+.link-btn:hover {
+  color: var(--brand);
+}
+.dot {
+  color: var(--line-2);
 }
 </style>
