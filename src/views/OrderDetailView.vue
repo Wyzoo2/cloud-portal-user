@@ -1,16 +1,12 @@
 <template>
   <div class="order-detail">
-    <!-- 页头带：订单号作为标题，右侧给应付与状态 -->
+    <!-- 页头带：订单号作为标题，右侧给状态 -->
     <PageBand
       :crumb="[{ text: '首页', to: '/' }, { text: '我的订单', to: '/orders' }, { text: '订单详情' }]"
       :title="order ? order.order_no || '订单详情' : '订单详情'"
       desc="按项展示开通结果：成功项给出实例与到期时间，失败项给出原因与退款单号。"
     >
       <template #side>
-        <div class="band-stat">
-          <b class="figure">{{ order ? formatCents(dueCents) : '—' }}</b>
-          <span>应付金额</span>
-        </div>
         <div class="band-stat">
           <b class="figure">{{ statusWord }}</b>
           <span>订单状态</span>
