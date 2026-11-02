@@ -14,10 +14,7 @@
         <div>
           <div class="topic">
             <span class="mark">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"
-                stroke-linecap="round" stroke-linejoin="round">
-                <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" />
-              </svg>
+              <img :src="logoUrl" alt="优芽云" />
             </span>
             企业版
           </div>
@@ -122,6 +119,7 @@
 import { useUserStore } from '../store'
 import { authError } from '../utils/errors'
 import { useIsMobile } from '../utils/breakpoint'
+import logoUrl from '../assets/logo.png'
 
 const USERNAME_RE = /^[a-zA-Z0-9_]{4,32}$/
 const PASSWORD_RE = /^(?=.*[A-Za-z])(?=.*\d)[\s\S]{8,64}$/
@@ -135,7 +133,7 @@ export default {
   emits: ['update:modelValue', 'go-enterprise-login'],
   setup() {
     const isMobile = useIsMobile()
-    return { isMobile }
+    return { isMobile, logoUrl }
   },
   data() {
     const confirmRule = (getPwd, emptyMsg) => ({
@@ -279,15 +277,19 @@ export default {
 .topic .mark {
   width: 22px;
   height: 22px;
+  padding: 2px;
   border-radius: 7px;
   display: grid;
   place-items: center;
-  color: #fff;
-  background: var(--accent-gradient);
+  overflow: hidden;
+  background: var(--bg-0);
+  box-shadow: 0 0 0 1px var(--line);
 }
-.topic .mark svg {
-  width: 13px;
-  height: 13px;
+.topic .mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
 }
 .head h2 {
   margin: 0;

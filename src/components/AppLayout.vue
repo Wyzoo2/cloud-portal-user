@@ -5,13 +5,10 @@
       <!-- 左：Logo -->
       <div class="brand" @click="$router.push('/')">
         <span class="mark">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"
-              stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
-          </svg>
+          <img :src="logoUrl" alt="优芽云" />
         </span>
         <div class="brand-text">
-          <b>云平台统一门户</b>
+          <b>优芽云平台</b>
           <small>CLOUD PORTAL</small>
         </div>
       </div>
@@ -131,12 +128,13 @@ import { mapState, mapActions } from 'pinia'
 import { useUserStore } from '../store'
 import AmountText from './AmountText.vue'
 import { APP_MENU } from '../utils/constants'
+import logoUrl from '../assets/logo.png'
 
 export default {
   name: 'AppLayout',
   components: { AmountText },
   data() {
-    return { menu: APP_MENU, scrolled: false, menuOpen: false }
+    return { menu: APP_MENU, scrolled: false, menuOpen: false, logoUrl }
   },
   mounted() {
     window.addEventListener('scroll', this.onScroll, { passive: true })
@@ -257,9 +255,6 @@ export default {
 .header.dark .brand-text small {
   color: rgba(255, 255, 255, 0.5);
 }
-.header.dark .brand .mark {
-  background: var(--accent-gradient);
-}
 .header.dark .nav-item {
   color: rgba(255, 255, 255, 0.72);
 }
@@ -303,11 +298,19 @@ export default {
 .brand .mark {
   width: 32px;
   height: 32px;
+  padding: 3px;
   border-radius: var(--r-md);
-  background: var(--brand);
+  background: #fff;
   display: grid;
   place-items: center;
-  color: #fff;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.brand .mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
 }
 .brand-text {
   display: flex;
@@ -615,10 +618,6 @@ export default {
     width: 30px;
     height: 30px;
     border-radius: var(--r-md);
-  }
-  .brand .mark svg {
-    width: 16px;
-    height: 16px;
   }
   .brand-text b {
     font-size: 15px;

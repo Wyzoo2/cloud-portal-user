@@ -5,12 +5,9 @@
 
     <main class="card">
       <div class="logo">
-        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"
-            stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" />
-        </svg>
+        <img :src="logoUrl" alt="优芽云" />
       </div>
-      <h1>云平台统一门户</h1>
+      <h1>优芽云平台</h1>
       <p class="sub">{{ subtitle }}</p>
 
       <slot />
@@ -19,10 +16,15 @@
 </template>
 
 <script>
+import logoUrl from '../assets/logo.png'
+
 export default {
   name: 'AuthShell',
   props: {
     subtitle: { type: String, default: '统一账号 · 统一钱包' }
+  },
+  data() {
+    return { logoUrl }
   }
 }
 </script>
@@ -74,7 +76,7 @@ export default {
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.42);
 }
 
-/* 品牌标：站内渐变 */
+/* 品牌标：logo 本身是白底，这里给白底圆角容器 */
 .logo {
   width: 54px;
   height: 54px;
@@ -82,13 +84,14 @@ export default {
   border-radius: 15px;
   display: grid;
   place-items: center;
-  color: #fff;
-  background: var(--accent-gradient);
-  box-shadow: 0 6px 14px rgba(29, 59, 214, 0.22);
+  overflow: hidden;
+  background: transparent;
 }
-.logo svg {
-  width: 25px;
-  height: 25px;
+.logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
 }
 
 h1 {

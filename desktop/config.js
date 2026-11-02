@@ -12,7 +12,7 @@ module.exports = {
   //   曾经用过 .103 / .104，当前联调是 .105（与仓库根目录 vite.config.js 保持一致）
   //   $env:PORTAL_API_TARGET="http://192.168.9.103:3000"
   // npm run desktop:start
-  apiTarget: process.env.PORTAL_API_TARGET || 'http://192.168.9.105:3000',
+  apiTarget: process.env.PORTAL_API_TARGET || 'http://192.168.9.222:3000',
 
   // 前端接口前缀由 src/deploy.config.js 的 MOUNTED 决定（/api 或 /portal/api）。
   // 这里默认把 /portal 前缀剥掉再转发到后端 /api（测试后端没有 /portal 上下文）；

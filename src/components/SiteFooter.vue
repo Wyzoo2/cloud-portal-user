@@ -13,9 +13,9 @@
     <!-- 页脚主体 -->
     <div class="wrap main">
       <div class="brand">
-        <span class="mark"></span>
+        <span class="mark"><img :src="logoUrl" alt="优芽云" /></span>
         <div class="brand-text">
-          <b>云平台统一门户</b>
+          <b>优芽云平台</b>
           <small>一个账号 · 一个钱包 · 三条产品线</small>
         </div>
       </div>
@@ -37,6 +37,7 @@
 import { mapState } from 'pinia'
 import { APP_MENU } from '../utils/constants'
 import { useUserStore } from '../store'
+import logoUrl from '../assets/logo.png'
 
 export default {
   name: 'SiteFooter',
@@ -48,7 +49,7 @@ export default {
     actionTo: { type: [String, Object], default: '' }
   },
   data() {
-    return { menu: APP_MENU }
+    return { menu: APP_MENU, logoUrl }
   },
   computed: {
     // 企业普通成员没有充值入口
@@ -127,10 +128,18 @@ export default {
 .mark {
   width: 28px;
   height: 28px;
+  padding: 3px;
   border-radius: var(--r-md);
-  background: var(--accent-gradient);
+  background: #fff;
   display: block;
+  overflow: hidden;
   flex-shrink: 0;
+}
+.mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
 }
 .brand-text b {
   display: block;

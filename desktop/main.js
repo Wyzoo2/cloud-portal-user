@@ -68,7 +68,7 @@ function createWindow(url) {
     useContentSize: true,
     show: false,
     backgroundColor: '#0b1020',
-    title: '云平台统一门户',
+    title: '优芽云平台',
     autoHideMenuBar: true,
     icon: path.join(__dirname, 'build', 'icon.png'),
     webPreferences: {
@@ -135,7 +135,7 @@ function buildMenu() {
             dialog.showMessageBox(mainWindow, {
               type: 'info',
               title: '关于',
-              message: '云平台统一门户（桌面端）',
+              message: '优芽云平台（桌面端）',
               detail: `版本 ${app.getVersion()}\n后端：${cfg.apiTarget}\n窗口：${cfg.window.width}×${cfg.window.height}（iPad 平板排版）`
             })
         }
