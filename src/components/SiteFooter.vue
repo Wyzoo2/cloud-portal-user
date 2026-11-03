@@ -13,9 +13,9 @@
     <!-- 页脚主体 -->
     <div class="wrap main">
       <div class="brand">
-        <span class="mark"><img :src="logoUrl" alt="优芽云" /></span>
+        <span class="mark"><img :src="logoUrl" alt="云" /></span>
         <div class="brand-text">
-          <b>优芽云平台</b>
+          <b>云平台</b>
           <small>一个账号 · 一个钱包 · 三条产品线</small>
         </div>
       </div>

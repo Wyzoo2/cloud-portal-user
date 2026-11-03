@@ -5,9 +5,9 @@
 
     <main class="card">
       <div class="logo">
-        <img :src="logoUrl" alt="优芽云" />
+        <img :src="logoUrl" alt="云" />
       </div>
-      <h1>优芽云平台</h1>
+      <h1>云平台</h1>
       <p class="sub">{{ subtitle }}</p>
 
       <slot />

@@ -1,11 +1,11 @@
 {
   "name": "cloud-portal-desktop",
-  "productName": "优芽云平台",
+  "productName": "云平台",
   "version": "0.1.0",
   "private": true,
-  "description": "优芽云平台 · Windows 桌面端（iPad 平板排版，1180×820）",
+  "description": "云平台 · Windows 桌面端（iPad 平板排版，1180×820）",
   "main": "main.js",
-  "author": "优芽云平台",
+  "author": "云平台",
   "license": "UNLICENSED",
   "scripts": {
     "start": "electron .",
@@ -20,7 +20,7 @@
   },
   "build": {
     "appId": "com.cloud.portal.user",
-    "productName": "优芽云平台",
+    "productName": "云平台",
     "directories": {
       "output": "release",
       "buildResources": "build"
@@ -52,11 +52,11 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "优芽云平台",
-      "artifactName": "优芽云平台-Setup-${version}.${ext}"
+      "shortcutName": "云平台",
+      "artifactName": "云平台-Setup-${version}.${ext}"
     },
     "portable": {
-      "artifactName": "优芽云平台-${version}-portable.${ext}"
+      "artifactName": "云平台-${version}-portable.${ext}"
     }
   }
 }

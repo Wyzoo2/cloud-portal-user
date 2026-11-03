@@ -14,7 +14,7 @@
         <div>
           <div class="topic">
             <span class="mark">
-              <img :src="logoUrl" alt="优芽云" />
+              <img :src="logoUrl" alt="云" />
             </span>
             企业版
           </div>

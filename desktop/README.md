@@ -47,8 +47,8 @@ desktop/
 > ```
 >
 > 产物在 `desktop/release/`：
-> - `优芽云平台-Setup-<版本>.exe`（安装包）
-> - `优芽云平台-<版本>-portable.exe`（绿色版）
+> - `云平台-Setup-<版本>.exe`（安装包）
+> - `云平台-<版本>-portable.exe`（绿色版）
 
 ```powershell
 # 安装桌面端依赖（只需一次）
@@ -85,7 +85,7 @@ npm run build:win
 ### 改版本号
 
 出包文件名带版本号，改 `desktop/package.json` 的 `version` 即可（如 `0.1.1`），
-重新打包后产物会变成 `优芽云平台-Setup-0.1.1.exe`。前端仓库根的 `package.json` 版本与之独立。
+重新打包后产物会变成 `云平台-Setup-0.1.1.exe`。前端仓库根的 `package.json` 版本与之独立。
 
 
 ## 换后端地址
@@ -105,8 +105,8 @@ npm start
 
 ## 出包说明
 
-- 安装包：`优芽云平台-Setup-<版本>.exe`（可选安装目录、桌面/开始菜单快捷方式）
-- 绿色版：`优芽云平台-<版本>-portable.exe`（双击即用，不写注册表）
+- 安装包：`云平台-Setup-<版本>.exe`（可选安装目录、桌面/开始菜单快捷方式）
+- 绿色版：`云平台-<版本>-portable.exe`（双击即用，不写注册表）
 - 前端产物以 `extraResources` 打进 `resources/dist`，`main.js` 运行时按 `app.isPackaged` 取路径
 - 图标：改 `build/icon.svg` 后重新生成 512×512 PNG（见下方命令），electron-builder 会自动转 `.ico`
 

@@ -5,10 +5,10 @@
       <!-- 左：Logo -->
       <div class="brand" @click="$router.push('/')">
         <span class="mark">
-          <img :src="logoUrl" alt="优芽云" />
+          <img :src="logoUrl" alt="云" />
         </span>
         <div class="brand-text">
-          <b>优芽云平台</b>
+          <b>云平台</b>
           <small>CLOUD PORTAL</small>
         </div>
       </div>
