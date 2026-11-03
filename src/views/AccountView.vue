@@ -4,7 +4,6 @@
     <PageBand
       :crumb="[{ text: '首页', to: '/' }, { text: '账户' }]"
       title="账户中心"
-      desc="余额、充值、流水与账户安全集中在这一页：钱包与个人设置不再各自成一个空页面。"
     >
       <template #side>
         <div class="band-stat">

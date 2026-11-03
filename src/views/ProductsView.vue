@@ -4,7 +4,6 @@
     <PageBand
       :crumb="[{ text: '首页', to: '/' }, { text: '商品' }]"
       title="商品中心"
-      desc="三条产品线的规格与价格实时同步自各产品，下单时按实时价重算；开通失败自动退款，结果在订单详情按项展示。"
     >
       <template #side>
         <div class="band-stat">

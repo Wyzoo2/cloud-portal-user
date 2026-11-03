@@ -4,7 +4,6 @@
     <PageBand
       :crumb="[{ text: '首页', to: '/' }, { text: '订单' }]"
       title="我的订单"
-      desc="按创建时间倒序。点任意一行查看订单详情：成功项给出实例与到期时间，失败项给出原因与退款单号。"
     >
       <template #side>
         <div class="band-stat">
