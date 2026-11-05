@@ -77,17 +77,17 @@
         <div class="pwd">
           <el-form ref="formRef" :model="form" :rules="rules" label-position="top" @submit.prevent="onSubmit">
             <div class="pwd-grid">
-              <el-form-item prop="old_password" label="当前密码">
+              <el-form-item prop="old_password" label="当前密码" :error="oldPwdError">
                 <el-input v-model="form.old_password" type="password" size="large" show-password
-                  placeholder="请输入当前密码" />
+                  placeholder="请输入当前密码" autocomplete="current-password" />
               </el-form-item>
               <el-form-item prop="new_password" label="新密码">
                 <el-input v-model="form.new_password" type="password" size="large" show-password
-                  placeholder="8-64 位，含字母和数字" />
+                  placeholder="8-64 位，含字母和数字" autocomplete="new-password" maxlength="64" />
               </el-form-item>
               <el-form-item prop="confirm_password" label="确认新密码">
                 <el-input v-model="form.confirm_password" type="password" size="large" show-password
-                  placeholder="请再次输入新密码" />
+                  placeholder="请再次输入新密码" autocomplete="new-password" maxlength="64" />
               </el-form-item>
             </div>
             <div class="pwd-acts">
@@ -140,6 +140,9 @@ import { productLineName, WALLET_STATUS } from '../utils/constants'
 import { errorText } from '../utils/errors'
 import { AmountText, PageBand, Panel, StatusTag, SiteFooter } from '../components'
 
+/** 改密规则（与后端一致）：8-64 位，且同时含字母和数字 */
+const PASSWORD_RE = /^(?=.*[A-Za-z])(?=.*\d)[\s\S]{8,64}$/
+
 /** 写本地账本：配额满 / 隐私模式下 setItem 会抛，不能让它打断提示流程 */
 function writeBaseline(key, ids) {
   try {
@@ -163,25 +166,37 @@ export default {
       // 重新加载的重入保护
       reloading: false,
       saving: false,
+      // validate() 期间的重入保护（saving 只在真正发请求时置位，避免按钮空转）
+      busy: false,
       error: '',
       form: { old_password: '', new_password: '', confirm_password: '' },
       rules: {
-        old_password: [{ required: true, message: '请输入当前密码', trigger: 'blur' }],
+        old_password: [{ required: true, message: '请输入当前密码', trigger: ['blur', 'change'] }],
         new_password: [
-          { required: true, message: '请输入新密码', trigger: 'blur' },
-          { pattern: /^(?=.*[A-Za-z])(?=.*\d)[\s\S]{8,64}$/, message: '新密码需 8-64 位，且同时包含字母和数字', trigger: 'blur' }
+          { required: true, message: '请输入新密码', trigger: ['blur', 'change'] },
+          { pattern: PASSWORD_RE, message: '新密码需 8-64 位，且同时包含字母和数字', trigger: ['blur', 'change'] },
+          {
+            // 跨字段：新密码不能与当前密码相同（后端也会拦，前端先提示更直接）
+            validator: (rule, value, callback) => {
+              if (value && value === this.form.old_password) return callback(new Error('新密码不能与当前密码相同'))
+              callback()
+            },
+            trigger: ['blur', 'change']
+          }
         ],
         confirm_password: [
-          { required: true, message: '请再次输入新密码', trigger: 'blur' },
+          { required: true, message: '请再次输入新密码', trigger: ['blur', 'change'] },
           {
             validator: (rule, value, callback) => {
-              if (value !== this.form.new_password) callback(new Error('两次输入的密码不一致'))
-              else callback()
+              if (!value) return callback()
+              if (value !== this.form.new_password) return callback(new Error('两次输入的密码不一致'))
+              callback()
             },
-            trigger: 'blur'
+            trigger: ['blur', 'change']
           }
         ]
-      }
+      },
+      oldPwdError: ''
     }
   },
   computed: {
@@ -216,6 +231,29 @@ export default {
   beforeUnmount() {
     // 到账提示是 fire-and-forget：卸载后别再弹全局框（用户已经翻到别的页面了）
     this.destroyed = true
+  },
+  watch: {
+    // 新密码变了：重算「不能与当前密码相同」，并让已填的确认框重新比对
+    'form.new_password'() {
+      this.validateField('new_password')
+      if (this.form.confirm_password) this.validateField('confirm_password')
+    },
+    // 当前密码变了：清掉「当前密码错误」，并重算新密码那条跨字段规则
+    'form.old_password'() {
+      if (this.oldPwdError) this.oldPwdError = ''
+      if (this.form.new_password) this.validateField('new_password')
+    },
+    // 确认框自己变化也即时比对（el-input 的 change 只在失焦/回车触发）
+    'form.confirm_password'() {
+      if (this.form.confirm_password) this.validateField('confirm_password')
+    },
+    // 一改动就把服务端错误收掉，避免旧提示挂着
+    form: {
+      deep: true,
+      handler() {
+        if (this.error) this.error = ''
+      }
+    }
   },
   methods: {
     ...mapActions(useUserStore, ['refreshBalance', 'logout']),
@@ -319,24 +357,34 @@ export default {
       this.logout()
       this.$router.push('/login')
     },
+    /** 单项校验：失败时静默（提示由 el-form-item 显示，catch 掉避免未捕获的 Promise 拒绝） */
+    validateField(prop) {
+      const f = this.$refs.formRef
+      if (f && prop) f.validateField(prop).catch(() => {})
+    },
     async onSubmit() {
       // 防重复提交：validate() 是异步的，等它返回再置 saving 会留下空窗期，
-      // 用户快速双击会发两次改密请求 —— 守卫和 saving 必须放在最前面
-      if (this.saving) return
-      this.saving = true
+      // 用户快速双击会发两次改密请求 —— 守卫和 busy 必须放在最前面
+      if (this.busy) return
+      this.busy = true
       try {
+        // 先本地校验，全部通过才发请求（未通过时按钮不进入 loading）
         const valid = await this.$refs.formRef.validate().catch(() => false)
         if (!valid) return
         this.error = ''
+        this.oldPwdError = ''
+        this.saving = true
         await api.changePassword(this.form.old_password, this.form.new_password)
         ElMessage.success('密码修改成功，请重新登录')
         this.logout()
         this.$router.push('/login')
       } catch (e) {
-        // 改密场景 2003 = 当前密码错误（区别于登录的"账号或密码错误"）
-        this.error = Number(e && e.code) === 2003 ? '当前密码错误' : errorText(e)
+        // 改密场景 2003 = 当前密码错误（区别于登录的"账号或密码错误"）→ 落到字段上更好定位
+        if (Number(e && e.code) === 2003) this.oldPwdError = '当前密码错误'
+        else this.error = errorText(e)
       } finally {
         this.saving = false
+        this.busy = false
       }
     }
   }
